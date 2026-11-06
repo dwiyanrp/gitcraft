@@ -540,15 +540,15 @@ impl RepoTab {
         }
     }
 
-    /// While the pointer is on a row's `+N` (or on the list itself), every pill of the commit
-    /// stacked over the row, to pick one to check out. Returns whether it is open.
+    /// While the pointer is on the branch pill, the `+N` pill, or the list itself, every
+    /// pill of the commit stacked over the row, to pick one to check out. Returns whether it is open.
     #[allow(clippy::too_many_arguments)]
     fn ref_stack(
         &self,
         ui: &Ui,
         badges: &[Badge],
         i: usize,
-        more: Rect,
+        trigger: Rect,
         at: Pos2,
         cols: Cols,
         lane: Color32,
@@ -563,7 +563,7 @@ impl RepoTab {
             (0..badges.len()).any(|n| egui::Popup::is_id_open(ui.ctx(), slot_id(n).with("popup")));
         let open = menu_open
             || ui.ctx().pointer_hover_pos().is_some_and(|p| {
-                more.contains(p) || last.is_some_and(|r| r.expand(2.0).contains(p))
+                trigger.contains(p) || last.is_some_and(|r| r.expand(2.0).contains(p))
             });
         if !open {
             ui.data_mut(|d| d.remove::<Rect>(id));
@@ -870,7 +870,7 @@ impl RepoTab {
             );
             let stack_open = more_rect.is_some_and(|more| {
                 let at = pos2(rect.left() + 2.0, mid - 16.0);
-                self.ref_stack(ui, &badges, i, more, at, cols, row_color, acts)
+                self.ref_stack(ui, &badges, i, pill.union(more), at, cols, row_color, acts)
             });
             let refs_cell = Rect::from_min_max(rect.min, pos2(gx, bottom));
             if !stack_open && ui.rect_contains_pointer(refs_cell) {
