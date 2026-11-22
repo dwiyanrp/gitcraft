@@ -3,7 +3,6 @@
 use super::*;
 
 pub(super) fn checkout_items(
-    tab: &RepoTab,
     ui: &mut Ui,
     ctx: &Context<'_>,
     hash: &str,

@@ -60,7 +60,7 @@ pub(super) fn show(
 
     sync_items(tab, ui, &ctx, idle, acts);
     ui.separator();
-    checkout_items(tab, ui, &ctx, &hash, &target, is_head, idle, acts);
+    checkout_items(ui, &ctx, &hash, &target, is_head, idle, acts);
     worktree_items(tab, ui, &ctx, &hash, idle, acts);
     ui.separator();
     create_items(
