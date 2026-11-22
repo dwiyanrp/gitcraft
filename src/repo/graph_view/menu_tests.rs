@@ -92,6 +92,8 @@ fn area_d_menu_matrix_repositions_and_keeps_submenus_reachable() -> Result<(), S
             h.run();
             h.event(egui::Event::PointerMoved(egui::pos2(2.0, 2.0)));
             h.run_steps(12);
+            h.get_by_label("More actions").hover();
+            h.run_steps(12);
             let root = h.get_by_label_contains("Links / Copy").rect();
             assert!(
                 h.ctx.content_rect().contains_rect(root),
@@ -127,6 +129,9 @@ fn area_d_menu_matrix_repositions_and_keeps_submenus_reachable() -> Result<(), S
             );
             assert!(!egui::Popup::is_any_open(&h.ctx));
             h.get_by_label("Commit row").click_secondary();
+            h.run();
+            h.get_by_label("More actions").focus();
+            h.key_press(egui::Key::Enter);
             h.run();
             h.get_by_label("Compare ⏵").focus();
             h.key_press(egui::Key::Enter);
@@ -170,6 +175,8 @@ fn area_d_followup_branch_submenu_keeps_its_target_across_ref_reordering() {
         h.run();
         h.get_by_label("Commit row").click_secondary();
         h.run();
+        h.get_by_label("More actions").hover();
+        h.run_steps(12);
         h.get_by_label("Branches / Checkout ⏵").hover();
         h.run_steps(12);
         h.get_by_label("Branch bravo").hover();

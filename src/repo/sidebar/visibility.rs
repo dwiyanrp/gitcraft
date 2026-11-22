@@ -12,7 +12,7 @@ use crate::theme::Tokens;
 impl RepoTab {
     /// Whether the graph shows the branch `full` (`refs/heads/main`); the checked-out one it
     /// always does.
-    pub(super) fn branch_shown(&self, full: &str, is_head: bool) -> bool {
+    pub(in crate::repo) fn branch_shown(&self, full: &str, is_head: bool) -> bool {
         is_head || self.visibility.shows(full)
     }
 

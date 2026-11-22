@@ -1,5 +1,6 @@
 //! The right-click menu of a commit row, and of a branch pill on it.
 
+mod flat;
 mod references;
 
 mod rewrite;
@@ -90,11 +91,11 @@ impl RepoTab {
             return;
         };
         bounded_menu(ui, ("commit-menu", &commit.hash), |ui| {
-            self.commit_menu_contents(ui, i, pill, idle, acts)
+            flat::show(self, ui, i, pill, idle, acts)
         });
     }
 
-    fn commit_menu_contents(
+    pub(super) fn grouped_menu_contents(
         &self,
         ui: &mut Ui,
         i: usize,

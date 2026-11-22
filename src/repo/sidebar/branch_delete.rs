@@ -149,7 +149,7 @@ pub(in crate::repo) fn redo_delete(branch: &str, steps: Vec<Vec<String>>) -> Vec
 /// `track`. The push is what can fail (offline, signed out): first, it leaves nothing done, and
 /// undoing again later works. After the branch here, it would leave that made, and undoing again
 /// would stop at making it again, never pushing back the remote one.
-fn delete_both_undo(
+pub(in crate::repo) fn delete_both_undo(
     restore: Vec<Vec<String>>,
     remote: &str,
     refspec: &str,
@@ -160,7 +160,7 @@ fn delete_both_undo(
 
 /// Deleting the branch `branch` (with `flag`, `-d` or `-D`) and `name` on `remote`, which was at
 /// `expected` when last fetched.
-fn delete_both(
+pub(in crate::repo) fn delete_both(
     flag: &str,
     branch: &str,
     remote: &str,

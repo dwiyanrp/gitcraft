@@ -49,7 +49,9 @@ fn opened_regular_handle_survives_replacement_and_metadata_limits_apply() -> Res
     assert_eq!(read(&path).err(), Some(budget()));
     Ok(())
 }
-#[cfg(unix)]
+// rustix does not expose mknodat on Apple platforms; the sibling clone-options test skips
+// its FIFO check there too.
+#[cfg(target_os = "linux")]
 #[test]
 fn fifo_and_symlink_are_refused_without_waiting_for_a_writer() -> Result<(), String> {
     let dir = tempfile::tempdir().map_err(|e| e.to_string())?;

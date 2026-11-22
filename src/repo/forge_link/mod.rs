@@ -4,6 +4,8 @@
 
 use egui::Ui;
 
+use crate::menu_item::MenuItem;
+
 use super::{Action, RepoTab};
 use crate::forge::links::{self, Link, Target};
 use crate::git::Remote;
@@ -32,6 +34,70 @@ struct Choice {
 }
 
 impl LinkMenu {
+    /// Only "Copy link to {what}" for `target`, with a submenu when there are several remotes.
+    /// The flat commit menu lists copies itself, next to the other clipboard actions.
+    pub(crate) fn copy_items(
+        &self,
+        ui: &mut Ui,
+        what: &str,
+        target: &Target,
+        acts: &mut Vec<Action>,
+    ) {
+        let ask = |remote: &str| {
+            Action::ForgeLink(LinkRequest {
+                target: target.clone(),
+                remote: remote.to_owned(),
+                open: false,
+            })
+        };
+        let label = crate::i18n::message(
+            "repo-workflows-forge_link-items-a5232678",
+            &[("what", what.into())],
+        );
+        if let [one] = self.choices.as_slice() {
+            let tip = crate::i18n::message(
+                if matches!(target, Target::Branch { .. }) {
+                    "repo-workflows-forge_link-items-ea6a597e"
+                } else {
+                    "repo-workflows-forge_link-items-6bb03074"
+                },
+                &[
+                    ("one-remote-1", one.remote.clone().into()),
+                    ("one-place-2", one.place.clone().into()),
+                ],
+            );
+            if MenuItem::new(label)
+                .icon("copy")
+                .show(ui)
+                .on_hover_text(tip)
+                .clicked()
+            {
+                acts.push(ask(&one.remote));
+            }
+            return;
+        }
+        if self.choices.is_empty() {
+            return;
+        }
+        MenuItem::new(label).icon("command").submenu(ui, |ui| {
+            for c in &self.choices {
+                let text = format!("{} ({})", c.remote, c.place);
+                let tip = crate::i18n::message(
+                    "repo-workflows-forge_link-items-55932e34",
+                    &[("c-forge-1", c.forge.clone().into())],
+                );
+                let b = MenuItem::new(text)
+                    .icon("command")
+                    .show(ui)
+                    .on_hover_text(tip);
+                if b.clicked() {
+                    acts.push(ask(&c.remote));
+                    ui.close();
+                }
+            }
+        });
+    }
+
     /// "Copy link to {what}" and "Open {what} on GitHub" for `target`; each a submenu of the
     /// remotes when there are several to choose from.
     pub(crate) fn items(&self, ui: &mut Ui, what: &str, target: &Target, acts: &mut Vec<Action>) {
