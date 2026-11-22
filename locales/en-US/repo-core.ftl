@@ -3344,3 +3344,4 @@ repo-core-4258 = Checkout
 repo-core-4259 = No local branch at this commit
 repo-core-4260 = No remote-tracking branch here
 repo-core-4261 = Set Upstream
+repo-core-4262 = Annotated tag message

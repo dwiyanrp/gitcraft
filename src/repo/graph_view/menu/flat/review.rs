@@ -12,12 +12,17 @@ pub(super) fn review_item(
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
-    let branch = ctx.name.clone();
+    let branch = ctx.local.map(|b| b.name.clone());
     let base = tab
         .base_ref()
         .map(|b| b.name)
-        .filter(|name| *name != branch)
-        .or_else(|| tab.refs.current.clone().filter(|name| *name != branch));
+        .filter(|name| branch.as_deref() != Some(name.as_str()))
+        .or_else(|| {
+            tab.refs
+                .current
+                .clone()
+                .filter(|name| branch.as_deref() != Some(name.as_str()))
+        });
     let no_base = crate::i18n::text("repo-core-3396");
     let response = MenuItem::new(crate::i18n::text("repo-core-4247"))
         .icon("eye")
@@ -30,7 +35,7 @@ pub(super) fn review_item(
         crate::i18n::message(
             "repo-core-3398",
             &[
-                ("name", branch.clone().into()),
+                ("name", branch.clone().unwrap_or_default().into()),
                 ("base", base.clone().into()),
             ],
         )
@@ -39,14 +44,16 @@ pub(super) fn review_item(
     };
     let response = response.on_hover_text(tip);
     if response.clicked()
-        && let Some(base) = base
+        && let (Some(branch), Some(base)) = (branch, base)
     {
         acts.push(Action::ReviewBranch { branch, base });
     }
 }
 
-pub(super) fn patch_items(ui: &mut Ui, idle: bool, acts: &mut Vec<Action>) {
-    super::super::apply_patch_item(ui, idle, acts);
+pub(super) fn patch_items(ui: &mut Ui, is_head: bool, idle: bool, acts: &mut Vec<Action>) {
+    if is_head {
+        super::super::apply_patch_item(ui, idle, acts);
+    }
 }
 
 pub(super) fn create_patch_item(

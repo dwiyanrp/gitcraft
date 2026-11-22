@@ -3347,3 +3347,4 @@ repo-core-4258 = Auschecken
 repo-core-4259 = Kein lokaler Branch an diesem Commit
 repo-core-4260 = Kein Remote-Tracking-Branch hier
 repo-core-4261 = Upstream festlegen
+repo-core-4262 = Nachricht für annotierten Tag

@@ -64,12 +64,12 @@ pub(super) fn show(
     worktree_items(tab, ui, &ctx, &hash, idle, acts);
     ui.separator();
     create_items(
-        tab, ui, &ctx, &hash, &short, &summary, &target, merge, is_head, idle, acts,
+        tab, ui, &hash, &short, &summary, &target, merge, is_head, idle, acts,
     );
     ui.separator();
     review_item(tab, ui, &ctx, idle, acts);
     ui.separator();
-    patch_items(ui, idle, acts);
+    patch_items(ui, is_head, idle, acts);
     branch_items(tab, ui, &ctx, idle, acts);
     ui.separator();
     link_copy_items(tab, ui, &ctx, &hash, acts);

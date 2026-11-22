@@ -111,7 +111,7 @@ pub(super) fn tag_items(
     if response.clicked() {
         let mut dialog = Dialog::tag(hash, short, tab.default_remote());
         if let Dialog::Tag { message, .. } = &mut dialog {
-            message.push_str("Tag message");
+            message.push_str(crate::i18n::text("repo-core-4262"));
         }
         acts.push(Action::Dialog(dialog));
     }

@@ -7,7 +7,6 @@ use crate::repo::quick_edit::{self, Edit};
 pub(super) fn create_items(
     tab: &RepoTab,
     ui: &mut Ui,
-    ctx: &Context<'_>,
     hash: &str,
     short: &str,
     summary: &str,
@@ -27,7 +26,7 @@ pub(super) fn create_items(
         Action::Dialog(Dialog::create_branch(hash, short)),
     );
     reset_item(
-        tab, ui, ctx, hash, short, summary, target, merge, is_head, idle, acts,
+        tab, ui, hash, short, summary, target, merge, is_head, idle, acts,
     );
     edit_message_item(tab, ui, hash, idle, acts);
     action_item(
@@ -45,7 +44,6 @@ pub(super) fn create_items(
 fn reset_item(
     tab: &RepoTab,
     ui: &mut Ui,
-    ctx: &Context<'_>,
     hash: &str,
     short: &str,
     summary: &str,
@@ -70,7 +68,7 @@ fn reset_item(
         head: &tab.refs.head,
         upstream: upstream.as_deref(),
     };
-    let label = crate::i18n::message("repo-core-4246", &[("name", ctx.name.clone().into())]);
+    let label = crate::i18n::message("repo-core-4246", &[("name", target.to_string().into())]);
     let checked_out = crate::i18n::text("repo-core-0796");
     submenu(ui, hash, "reset", label, "undo-2", |ui| {
         if !idle {
