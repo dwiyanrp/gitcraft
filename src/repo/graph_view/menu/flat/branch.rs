@@ -52,7 +52,6 @@ pub(super) fn checkout_items(
             }
         },
     );
-    let _ = tab;
 }
 
 pub(super) fn worktree_items(
