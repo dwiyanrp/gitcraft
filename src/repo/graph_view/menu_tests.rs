@@ -179,7 +179,7 @@ fn area_d_followup_branch_submenu_keeps_its_target_across_ref_reordering() {
         h.run_steps(12);
         h.get_by_label("Branches / Checkout ⏵").hover();
         h.run_steps(12);
-        h.get_by_label("Branch bravo").hover();
+        h.get_by_label("Branch bravo ⏵").hover();
         h.run_steps(12);
         h.get_by_label("Check out").hover();
         h.run_steps(12);

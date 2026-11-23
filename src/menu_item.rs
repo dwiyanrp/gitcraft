@@ -150,7 +150,9 @@ impl<'a> MenuItem<'a> {
         ui: &mut Ui,
         content: impl FnOnce(&mut Ui) -> R,
     ) -> egui::InnerResponse<Option<R>> {
-        let button = self.button(ui);
+        let button = self
+            .button(ui)
+            .right_text(egui::containers::menu::SubMenuButton::RIGHT_ARROW);
         let salt = ui.next_auto_id().with("bounded-menu-item");
         let content = |ui: &mut Ui| bounded_menu(ui, salt, content);
         let response = ui
@@ -194,11 +196,11 @@ pub(crate) fn same_reason_below<T: PartialEq>(reasons: &[Option<T>]) -> Vec<bool
 }
 
 /// The in-viewport fallback for platforms without native transient menus. egui's Popup selects
-/// the best alignment and constrains its Area to the viewport; bound every nested menu too.
-/// Stable salts preserve scroll/focus state while repository rows move underneath the popup.
+/// the best alignment and constrains its Area to the viewport; bound every nested menu the same
+/// way. Entries are laid out in full, with no scroll area or scrollbar.
 pub(crate) fn bounded_menu<R>(
     ui: &mut Ui,
-    salt: impl egui::AsIdSalt,
+    _salt: impl egui::AsIdSalt,
     content: impl FnOnce(&mut Ui) -> R,
 ) -> R {
     let room = ui.ctx().content_rect().size();
@@ -207,16 +209,7 @@ pub(crate) fn bounded_menu<R>(
     let width = (room.x * 0.5 - 40.0).clamp(1.0, 360.0);
     ui.set_max_width(width);
     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
-    egui::ScrollArea::both()
-        .id_salt(salt)
-        .max_width(width)
-        .max_height((room.y - 32.0).max(1.0))
-        .auto_shrink([true, true])
-        .show(ui, |ui| {
-            ui.set_max_width(width);
-            content(ui)
-        })
-        .inner
+    content(ui)
 }
 
 /// A raw stable menu salt and independently localized caption.
@@ -258,7 +251,7 @@ mod area_d_tests {
     use egui_kittest::kittest::Queryable;
 
     #[test]
-    fn area_d_tall_menu_scrolls_to_last_action_and_preserves_identity() {
+    fn area_d_menu_shows_every_action_without_scrolling() {
         let mut h = egui_kittest::Harness::builder()
             .with_size([420.0, 240.0])
             .build_ui_state(
@@ -268,7 +261,7 @@ mod area_d_tests {
                         .style(crate::theme::menu_style)
                         .show(|ui| {
                             super::bounded_menu(ui, "many-branches", |ui| {
-                                for i in 0..100 {
+                                for i in 0..6 {
                                     if ui.button(format!("Branch action {i}")).clicked() {
                                         *picked = Some(i);
                                     }
@@ -282,17 +275,15 @@ mod area_d_tests {
         h.get_by_label("Long menu").click();
         h.run();
         let first = h.get_by_label("Branch action 0").rect();
+        let last = h.get_by_label("Branch action 5").rect();
         assert!(h.ctx.content_rect().contains_rect(first));
-        h.get_by_label("Branch action 99").scroll_to_me();
-        h.run();
-        let last = h.get_by_label("Branch action 99").rect();
         assert!(
             h.ctx.content_rect().contains_rect(last),
-            "last action is unreachable: {last:?}"
+            "last action is not shown: {last:?}"
         );
-        h.get_by_label("Branch action 99").click();
+        h.get_by_label("Branch action 5").click();
         h.run();
-        assert_eq!(*h.state(), Some(99));
+        assert_eq!(*h.state(), Some(5));
     }
 }
 
@@ -390,6 +381,17 @@ mod interaction_tests {
             [&"Fetch".to_owned()]
         );
         out.drop_without_applying_deltas();
+    }
+
+    #[test]
+    fn submenu_entries_carry_the_same_arrow_as_menu_buttons() {
+        let mut h = Harness::new_ui(|ui| {
+            MenuItem::new("Open recent").submenu(ui, |ui| {
+                ui.label("A project");
+            });
+        });
+        h.run();
+        h.get_by_label("Open recent ⏵");
     }
 
     #[test]
