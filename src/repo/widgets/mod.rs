@@ -131,15 +131,37 @@ pub(super) fn top_rounded(radius: u8) -> CornerRadius {
 /// The strip at the top of a side panel, like PhotoCraft's panel tab strips: a tab with the
 /// title, and room on the right for buttons.
 pub fn panel_header(ui: &mut Ui, title: &str, add_buttons: impl FnOnce(&mut Ui)) {
+    panel_header_with(ui, title, |_| {}, add_buttons);
+}
+
+/// Like [`panel_header`], with optional leading controls on the left before the title tab.
+pub fn panel_header_with(
+    ui: &mut Ui,
+    title: &str,
+    add_left: impl FnOnce(&mut Ui),
+    add_buttons: impl FnOnce(&mut Ui),
+) {
     let t = Tokens::get(ui.ctx());
     let (rect, _) =
         ui.allocate_exact_size(vec2(ui.available_width(), PANEL_HEADER_H), Sense::hover());
+    ui.painter().rect_filled(rect, 0.0, t.tab_strip);
+    let mut left_child = ui.new_child(
+        egui::UiBuilder::new()
+            .max_rect(Rect::from_min_max(rect.min + vec2(6.0, 0.0), rect.max))
+            .layout(egui::Layout::left_to_right(egui::Align::Center)),
+    );
+    add_left(&mut left_child);
+    let left_w = left_child.min_rect().width();
     let painter = ui.painter();
-    painter.rect_filled(rect, 0.0, t.tab_strip);
+    let tab_x = if left_w > 0.0 {
+        rect.left() + 6.0 + left_w + 4.0
+    } else {
+        rect.left() + 4.0
+    };
     let font = theme::semibold(11.5);
     let galley = painter.layout_no_wrap(title.to_owned(), font, t.text);
     let tab = Rect::from_min_size(
-        pos2(rect.left() + 4.0, rect.top() + 4.0),
+        pos2(tab_x, rect.top() + 4.0),
         vec2(galley.size().x + 24.0, rect.height() - 4.0),
     );
     painter.rect_filled(tab, top_rounded(t.radius as u8), t.card);

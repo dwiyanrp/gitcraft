@@ -91,6 +91,7 @@ const SOURCES: &[(&str, &str)] = icons![
     "star",
     "sun",
     "tag",
+    "trash-2",
     "undo-2",
     "unfold-vertical",
     "user-round",

@@ -192,3 +192,51 @@ fn the_stash_dialog_offers_the_files_picked() {
         crate::repo::partial_stash::StagedSupport::Unknown
     );
 }
+
+#[test]
+fn discard_all_trash_button_only_appears_with_uncommitted_changes() {
+    use egui_kittest::{Harness, kittest::Queryable};
+
+    let ctx = egui::Context::default();
+    let mut tab = RepoTab::new_deferred("/nonexistent/discard-all-test".into(), &ctx);
+    tab.refs.head = "a".repeat(40);
+    let mut styled = false;
+    let mut h = Harness::builder()
+        .with_size([400.0, 500.0])
+        .build_ui_state(
+            move |ui, (tab, acts): &mut (RepoTab, Vec<Action>)| {
+                if !styled {
+                    crate::theme::install_fonts(ui.ctx());
+                    crate::theme::apply(
+                        ui.ctx(),
+                        &crate::theme::ThemeId::default(),
+                        &crate::theme::Tweaks::default(),
+                    );
+                    egui_extras::install_image_loaders(ui.ctx());
+                    styled = true;
+                    return;
+                }
+                egui::CentralPanel::default().show(ui, |ui| tab.changes_panel(ui, acts));
+            },
+            (tab, Vec::new()),
+        );
+    for _ in 0..3 {
+        h.step();
+    }
+    assert!(h.query_by_label("Discard all uncommitted changes").is_none());
+
+    h.state_mut().0.work.unstaged = vec![
+        changed("modified.rs", Area::Unstaged),
+        changed("new.rs", Area::Untracked),
+    ];
+    h.step();
+    h.step();
+    h.get_by_label("Discard all uncommitted changes").click();
+    h.step();
+    assert!(
+        h.state()
+            .1
+            .iter()
+            .any(|a| matches!(a, Action::Dialog(_)))
+    );
+}

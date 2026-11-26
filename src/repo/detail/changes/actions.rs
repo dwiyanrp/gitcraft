@@ -73,3 +73,24 @@ pub(in crate::repo) fn discard_dialog(f: &StatusFile) -> Dialog {
         .files_heading(crate::i18n::text("repo-core-0860"))
     }
 }
+
+/// Confirmation dialog to discard all uncommitted (staged, unstaged, conflicted, and untracked)
+/// file changes in the working tree.
+pub(super) fn discard_all_dialog(head: &str, has_untracked: bool, count: usize) -> Dialog {
+    let mut steps: Vec<Vec<String>> = if head.is_empty() {
+        vec![unstage_all_args(head).into_iter().map(str::to_owned).collect()]
+    } else {
+        vec![["reset", "--hard", "-q", "HEAD"].into_iter().map(str::to_owned).collect()]
+    };
+    if has_untracked {
+        steps.push(["clean", "-fd", "-q"].into_iter().map(str::to_owned).collect());
+    }
+    Dialog::confirm(
+        "Discard all changes",
+        format!("Discard all {count} uncommitted file changes? This can't be undone."),
+        "Discard all",
+        steps,
+        None,
+    )
+    .refresh(Refresh::Status)
+}

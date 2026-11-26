@@ -25,9 +25,30 @@ use crate::theme::{self, Tokens};
 impl RepoTab {
     pub(super) fn changes_panel(&mut self, ui: &mut Ui, acts: &mut Vec<Action>) {
         let t = Tokens::get(ui.ctx());
-        widgets::panel_header(
+        let idle = self.busy_op.is_none();
+        let count =
+            self.work.conflicted.len() + self.work.unstaged.len() + self.work.staged.len();
+        widgets::panel_header_with(
             ui,
             crate::i18n::text("repo-core-0811"),
+            |ui| {
+                if count > 0 {
+                    let has_untracked =
+                        self.work.unstaged.iter().any(|f| f.area == Area::Untracked);
+                    let r = ui
+                        .add_enabled_ui(idle, |ui| {
+                            discard_all_button(ui, "Discard all uncommitted changes")
+                        })
+                        .inner;
+                    if r.clicked() {
+                        acts.push(Action::Dialog(discard_all_dialog(
+                            &self.refs.head,
+                            has_untracked,
+                            count,
+                        )));
+                    }
+                }
+            },
             branch_tree::files_toggle,
         );
         // Keep both staging and composition reachable after reopening in a short window.
@@ -305,6 +326,35 @@ impl RepoTab {
             },
         );
     }
+}
+
+fn discard_all_button(ui: &mut Ui, tooltip: &str) -> egui::Response {
+    let t = Tokens::get(ui.ctx());
+    let (rect, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), Sense::click());
+    crate::a11y::a11y(&resp, egui::WidgetType::Button, tooltip);
+    let fill = if resp.hovered() && ui.is_enabled() {
+        t.danger.gamma_multiply(0.18)
+    } else {
+        t.danger.gamma_multiply(0.08)
+    };
+    let stroke = egui::Stroke::new(
+        1.0,
+        if ui.is_enabled() {
+            t.danger.gamma_multiply(0.75)
+        } else {
+            t.text_faint
+        },
+    );
+    ui.painter()
+        .rect(rect, t.radius_sm, fill, stroke, egui::StrokeKind::Inside);
+    icons::paint(
+        ui,
+        rect,
+        "trash-2",
+        13.0,
+        if ui.is_enabled() { t.danger } else { t.text_faint },
+    );
+    resp.on_hover_text(tooltip)
 }
 
 #[cfg(test)]
