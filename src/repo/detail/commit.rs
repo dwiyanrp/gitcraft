@@ -39,23 +39,9 @@ impl RepoTab {
             }
             // Commit file presentation has its own preference in Settings.
         });
-        if stash.is_none() && self.detail_hash.is_some() {
-            ui.horizontal(|ui| {
-                ui.selectable_value(
-                    &mut self.prompt_session.open,
-                    false,
-                    crate::i18n::text("repo-core-0056"),
-                );
-                ui.selectable_value(
-                    &mut self.prompt_session.open,
-                    true,
-                    crate::i18n::text("repo-core-0864"),
-                );
-            });
-            if self.prompt_session.open {
-                self.prompt_session_panel(ui, acts);
-                return;
-            }
+        if stash.is_none() && self.detail_hash.is_some() && self.prompt_session.open {
+            self.prompt_session_panel(ui, acts);
+            return;
         }
         if let Some(stash) = &stash {
             stash_banner(ui, acts, stash, idle);
@@ -101,11 +87,6 @@ impl RepoTab {
         // Files still on their way (not read ahead either).
         let reading = self.detail.is_none() && self.files_cache.get(&detail.hash).is_none();
 
-        self.review_all_button(
-            ui,
-            crate::repo::review_workflow::ReviewSource::Commit(detail.hash.clone()),
-            acts,
-        );
         // On a forge, the commit's builds: how they went, if that's known.
         let builds = (self.ci_project().is_some() && self.stash_view.is_none())
             .then(|| self.ci.by_sha.get(&detail.hash));

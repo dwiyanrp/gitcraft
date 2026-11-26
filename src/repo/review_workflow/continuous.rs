@@ -11,6 +11,7 @@ use egui::{RichText, Ui};
 pub(crate) enum ReviewSource {
     #[allow(dead_code)]
     Working,
+    #[allow(dead_code)]
     Commit(String),
     Comparison { from: String, to: Option<String> },
     PullRequest { number: u64, url: String },
