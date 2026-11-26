@@ -225,3 +225,8 @@ egui_kittest = { git = "https://github.com/JKamsker/egui", rev = "94295cb85d393c
 emath = { git = "https://github.com/JKamsker/egui", rev = "94295cb85d393c59575ca8f0a74878c2b43c4ce8" }
 epaint = { git = "https://github.com/JKamsker/egui", rev = "94295cb85d393c59575ca8f0a74878c2b43c4ce8" }
 epaint_default_fonts = { git = "https://github.com/JKamsker/egui", rev = "94295cb85d393c59575ca8f0a74878c2b43c4ce8" }
+
+[profile.fast]
+inherits = "dev"
+debug = false
+incremental = true
