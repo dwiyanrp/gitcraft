@@ -106,7 +106,6 @@ impl RepoTab {
         };
         widgets::a11y_selected(&resp, label, self.selected == Some(i));
         let painter = ui.painter_at(rect);
-        let mut hovered_message = None;
         let is_match = self.search.matches.contains(&commit.hash);
         let background = row_background(
             &painter,
@@ -239,25 +238,6 @@ impl RepoTab {
                     acts.push(Action::OpenUrl(server.change_url(id)));
                 }
             }
-            let description_rect = Rect::from_min_max(
-                pos2((gx + cols.graph).min(rect.right()), rect.top()),
-                pos2(
-                    (rect.right() - cols.trailing()).max(gx + cols.graph),
-                    rect.bottom(),
-                ),
-            );
-            if !self.ghost.drawing()
-                && super::message_tooltip::show(
-                    ui,
-                    &resp,
-                    description_rect.intersect(rect),
-                    &self.path,
-                    &commit.hash,
-                    self.graph_messages.message(&self.path, &commit.hash),
-                )
-            {
-                hovered_message = Some(commit.hash.clone());
-            }
             trailing_columns(ui, &painter, &t, &row, viewport.now, &self.authorship);
             if let Some(status) = ci {
                 let center = pos2(rect.right() - cols.trailing() - 9.0, row.mid());
@@ -299,7 +279,7 @@ impl RepoTab {
             };
             acts.push(compare.unwrap_or(selection));
         }
-        (resp, hovered_message)
+        (resp, None)
     }
 
     /// What a screen reader says for the row of `commit`: the changes row's counts, a stash's

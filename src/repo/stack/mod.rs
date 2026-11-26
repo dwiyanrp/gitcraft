@@ -17,7 +17,9 @@ use crate::git::stack::{self, Layer, Recorded};
 
 use super::{RepoTab, Undo};
 pub(crate) use dialog::BasedOn;
-pub(crate) use model::{Tree, chain, dependents, looped, to_restack, trees};
+#[cfg(test)]
+pub(crate) use model::chain;
+pub(crate) use model::{Tree, dependents, looped, to_restack, trees};
 
 /// What the views ask of stacks.
 pub(crate) enum StackAct {
@@ -286,6 +288,7 @@ impl RepoTab {
     }
 
     /// The line a branch's tooltip gets when it is a layer of a stack.
+    #[cfg(test)]
     pub(super) fn stack_line(&self, branch: &str) -> Option<String> {
         let layer = self.stacks.layer(branch)?;
         let mut line = crate::i18n::message(

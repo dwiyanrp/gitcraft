@@ -97,6 +97,7 @@ pub(crate) fn looped(layers: &[Layer]) -> Vec<String> {
 
 /// The branches from the bottom of `branch`'s stack up to it: `[main, schema, api]` for `api`.
 /// Just `[branch]` for a branch that is no layer.
+#[cfg(test)]
 pub(crate) fn chain(layers: &[Layer], branch: &str) -> Vec<String> {
     let mut out = vec![branch.to_owned()];
     let mut at = branch;

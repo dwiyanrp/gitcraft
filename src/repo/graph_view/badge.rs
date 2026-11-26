@@ -83,6 +83,7 @@ impl Badge {
         }
     }
 
+    #[cfg(test)]
     pub(super) fn describe(&self) -> String {
         match self.kind {
             BadgeKind::Tag => crate::i18n::message(

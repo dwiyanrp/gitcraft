@@ -132,41 +132,9 @@ impl RepoTab {
         );
         // Not during a drag: the list would cover the rows below, which then take no drop.
         let dragging = self.dragged(ui.ctx()).is_some();
-        let stack_open = !dragging
-            && more_rect.is_some_and(|more| {
-                let at = pos2(rect.left() + 2.0, mid - 16.0);
-                self.ref_stack(ui, &badges, row.i, more, at, cols, row.color, acts)
-            });
-        let refs_cell = Rect::from_min_max(rect.min, pos2(gx, rect.bottom()));
-        // No tooltip in the way of a drag.
-        if !stack_open && !dragging && ui.rect_contains_pointer(refs_cell) {
-            let mut lines: Vec<String> = badges
-                .iter()
-                .map(|b| format!("{}\n{}", b.describe(), self.ref_description(&b.full_ref)))
-                .collect();
-            lines.extend(
-                badges
-                    .iter()
-                    .filter(|b| b.kind == BadgeKind::Branch && b.local)
-                    .filter_map(|b| self.stack_line(&b.label)),
-            );
-            let drag = if first.kind == BadgeKind::PullRequest {
-                crate::i18n::text("repo-core-2683")
-            } else if first.kind == BadgeKind::Branch {
-                crate::i18n::text("repo-core-2684")
-            } else {
-                crate::i18n::text("repo-core-2685")
-            };
-            let resp = resp.on_hover_text(crate::i18n::message(
-                "repo-core-2686",
-                &[
-                    ("n", lines.join("\n").to_string().into()),
-                    ("author", row.commit.author.to_string().into()),
-                    ("date", crate::i18n::date_iso(&row.commit.date).into()),
-                    ("drag", drag.to_string().into()),
-                ],
-            ));
-            return (resp, hit);
+        if !dragging && let Some(more) = more_rect {
+            let at = pos2(rect.left() + 2.0, mid - 16.0);
+            self.ref_stack(ui, &badges, row.i, more, at, cols, row.color, acts);
         }
         (resp, hit)
     }
@@ -336,17 +304,6 @@ impl RepoTab {
 
     /// Clicks on one pill of a row's stack, which act like those on the row's own pill.
     fn stack_slot_clicks(&self, resp: Response, b: &Badge, i: usize, acts: &mut Vec<Action>) {
-        let hint = match self.pill_checkout(b) {
-            _ if b.kind == BadgeKind::PullRequest => crate::i18n::text("repo-core-2690"),
-            _ if b.head => crate::i18n::text("repo-core-2691"),
-            Some(Action::Pull) => crate::i18n::text("repo-core-2692"),
-            _ => crate::i18n::text("repo-core-2693"),
-        };
-        let resp = resp.on_hover_text(format!(
-            "{} ({hint})\n{}",
-            b.describe(),
-            self.ref_description(&b.full_ref)
-        ));
         widgets::a11y(&resp, egui::WidgetType::Button, || {
             format!("{} {}", b.spoken(), self.ref_description(&b.full_ref))
         });
