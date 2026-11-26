@@ -81,77 +81,79 @@ pub(super) fn branch_items(
     tab: &RepoTab,
     ui: &mut Ui,
     ctx: &Context<'_>,
+    hash: &str,
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
-    let no_branch = crate::i18n::text("repo-core-4259");
-    let rename = MenuItem::new(crate::i18n::message(
-        "repo-core-4248",
-        &[("name", ctx.name.clone().into())],
-    ))
-    .icon("wrench")
-    .enabled(idle)
-    .refused(ctx.local.is_none().then_some(no_branch))
-    .show(ui);
-    if rename.clicked()
-        && let Some(b) = ctx.local
-    {
-        acts.push(Action::Dialog(Dialog::rename_branch(&b.name)));
+    let local_here = ctx.local.filter(|b| b.target == hash);
+    if let Some(b) = local_here {
+        let rename = MenuItem::new(crate::i18n::message(
+            "repo-core-4248",
+            &[("name", b.name.clone().into())],
+        ))
+        .icon("wrench")
+        .enabled(idle)
+        .show(ui);
+        if rename.clicked() {
+            acts.push(Action::Dialog(Dialog::rename_branch(&b.name)));
+        }
     }
 
     let refusal = ctx.local.and_then(|b| delete_refusal(tab, b));
-    let delete = MenuItem::new(crate::i18n::message(
-        "repo-core-4256",
-        &[("name", ctx.name.clone().into())],
-    ))
-    .icon("minus")
-    .enabled(idle)
-    .refused(refusal)
-    .show(ui);
-    if delete.clicked()
-        && let Some(b) = ctx.local
-    {
-        acts.push(local_delete_action(tab, b));
+    let is_head_only = ctx.local.is_some_and(|b| b.is_head) && refusal.is_none();
+    if !is_head_only {
+        let delete = MenuItem::new(crate::i18n::message(
+            "repo-core-4256",
+            &[("name", ctx.name.clone().into())],
+        ))
+        .icon("minus")
+        .enabled(idle)
+        .refused(refusal)
+        .show(ui);
+        if delete.clicked()
+            && let Some(b) = ctx.local
+        {
+            acts.push(local_delete_action(tab, b));
+        }
     }
 
-    let no_remote = crate::i18n::text("repo-core-4260");
-    let remote_name = ctx.remote.map(|b| b.name.as_str()).unwrap_or_default();
-    let delete_remote = MenuItem::new(crate::i18n::message(
-        "repo-core-4256",
-        &[("name", remote_name.to_string().into())],
-    ))
-    .icon("minus")
-    .enabled(idle)
-    .refused(ctx.remote.is_none().then_some(no_remote))
-    .show(ui);
-    if delete_remote.clicked()
-        && let Some(b) = ctx.remote
-        && let Some(remote) = ctx.remote_name.as_deref()
-    {
-        let short = remote_short(&b.name, remote).unwrap_or(&b.name);
-        acts.push(remote_delete_action(tab, remote, short, b));
+    let remote_here = ctx.remote.filter(|b| b.target == hash);
+    if let Some(b) = remote_here {
+        let delete_remote = MenuItem::new(crate::i18n::message(
+            "repo-core-4256",
+            &[("name", b.name.clone().into())],
+        ))
+        .icon("minus")
+        .enabled(idle)
+        .show(ui);
+        if delete_remote.clicked()
+            && let Some(remote) = ctx.remote_name.as_deref()
+        {
+            let short = remote_short(&b.name, remote).unwrap_or(&b.name);
+            acts.push(remote_delete_action(tab, remote, short, b));
+        }
     }
 
-    let combined = ctx
-        .local
+    let combined = remote_here
+        .and_then(|_| ctx.local)
         .and_then(|b| both_delete_action(tab, b))
-        .filter(|_| refusal.is_none());
-    let both_name = ctx.remote.map(|b| b.name.as_str()).unwrap_or_default();
-    let delete_both = MenuItem::new(crate::i18n::message(
-        "repo-core-4257",
-        &[
-            ("name", ctx.name.clone().into()),
-            ("name2", both_name.to_string().into()),
-        ],
-    ))
-    .icon("minus")
-    .enabled(idle)
-    .refused(combined.is_none().then_some(no_remote))
-    .show(ui);
-    if delete_both.clicked()
+        .filter(|_| !is_head_only && refusal.is_none());
+    if let Some(b) = remote_here
         && let Some(action) = combined
     {
-        acts.push(action);
+        let delete_both = MenuItem::new(crate::i18n::message(
+            "repo-core-4257",
+            &[
+                ("name", ctx.name.clone().into()),
+                ("name2", b.name.clone().into()),
+            ],
+        ))
+        .icon("minus")
+        .enabled(idle)
+        .show(ui);
+        if delete_both.clicked() {
+            acts.push(action);
+        }
     }
 }
 

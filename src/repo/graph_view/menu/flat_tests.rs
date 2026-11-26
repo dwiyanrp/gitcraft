@@ -134,3 +134,68 @@ fn flat_pull_entry_pulls_fast_forwarding_when_possible() {
             .any(|action| matches!(action, crate::repo::Action::PullWith(PullMode::Merge)))
     );
 }
+
+#[test]
+fn flat_menu_hides_remote_delete_items_when_remote_is_on_another_commit() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash,
+        summary: "Earlier commit".to_owned(),
+        ..Default::default()
+    }));
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            ui.data_mut(|d| {
+                d.insert_temp(
+                    super::pill_menu_id(&"a".repeat(40)),
+                    Some("refs/heads/dev".to_owned()),
+                )
+            });
+            tab.commit_menu(&row, 0, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    h.get_by_label("Rename dev");
+    assert!(h.query_by_label("Delete dev").is_none());
+    assert!(h.query_by_label("Delete origin/dev").is_none());
+    assert!(h.query_by_label("Delete dev and origin/dev").is_none());
+}
+
+#[test]
+fn flat_menu_hides_rename_when_local_branch_is_on_another_commit() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash.clone(),
+        summary: "Remote commit".to_owned(),
+        ..Default::default()
+    }));
+    let remote_row_idx = t.commits.len() - 1;
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            ui.data_mut(|d| {
+                d.insert_temp(
+                    super::pill_menu_id(&other_hash),
+                    Some("refs/remotes/origin/dev".to_owned()),
+                )
+            });
+            tab.commit_menu(&row, remote_row_idx, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    assert!(h.query_by_label("Rename dev").is_none());
+    h.get_by_label("Delete origin/dev");
+}

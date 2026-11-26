@@ -117,9 +117,5 @@ pub(super) fn delete_refusal(tab: &RepoTab, b: &git::Branch) -> Option<&'static 
         .worktrees
         .iter()
         .any(|w| !w.current && w.branch.as_deref() == Some(b.name.as_str()));
-    (b.is_head || elsewhere).then_some(crate::i18n::text(if elsewhere {
-        "repo-core-3359"
-    } else {
-        "repo-core-3360"
-    }))
+    elsewhere.then(|| crate::i18n::text("repo-core-3359"))
 }

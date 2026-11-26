@@ -12,19 +12,17 @@ use crate::repo::{Action, Dialog, RepoTab, Undo, ops};
 impl RepoTab {
     /// Delete…, and Delete locally and on the remote… when `b` tracks a branch that is there.
     pub(super) fn delete_items(&self, ui: &mut Ui, acts: &mut Vec<Action>, b: &Branch, idle: bool) {
-        let restore = ops(&[&["branch", "--", &b.name, &b.target]]);
         // git refuses to delete a branch checked out in another worktree: with the remote's
         // deleted first (-D), that would leave its commits on no ref and nothing to undo.
         let elsewhere = self
             .worktrees
             .iter()
             .any(|w| !w.current && w.branch.as_deref() == Some(b.name.as_str()));
-        let why = if elsewhere {
-            crate::i18n::text("repo-core-3359")
-        } else {
-            crate::i18n::text("repo-core-3360")
-        };
-        let refused = (b.is_head || elsewhere).then_some(why);
+        if b.is_head && !elsewhere {
+            return;
+        }
+        let restore = ops(&[&["branch", "--", &b.name, &b.target]]);
+        let refused = elsewhere.then(|| crate::i18n::text("repo-core-3359"));
         let local_ref = format!("refs/heads/{}", b.name);
         // Only while the branch is where the menu saw it: commits made on it since (in the
         // terminal, while the dialog is open) are not what was asked to be deleted, nor what

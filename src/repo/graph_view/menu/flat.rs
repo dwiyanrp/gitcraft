@@ -70,7 +70,7 @@ pub(super) fn show(
     review_item(tab, ui, &ctx, idle, acts);
     ui.separator();
     patch_items(ui, is_head, idle, acts);
-    branch_items(tab, ui, &ctx, idle, acts);
+    branch_items(tab, ui, &ctx, &hash, idle, acts);
     ui.separator();
     link_copy_items(tab, ui, &ctx, &hash, acts);
     create_patch_item(ui, &hash, &summary, merge, acts);
