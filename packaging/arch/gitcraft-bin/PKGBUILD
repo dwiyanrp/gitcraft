@@ -1,6 +1,6 @@
 # Repackage the official Linux release without compiling Rust.
 pkgname=gitcraft-bin
-pkgver=0.4.0
+pkgver=0.4.1
 pkgrel=1
 pkgdesc='A small, personal visual git client'
 arch=('x86_64')
