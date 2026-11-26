@@ -76,10 +76,19 @@ impl Badge {
 
     /// The full names of the refs the pill stands for.
     pub(super) fn full_refs(&self) -> Vec<String> {
-        if self.kind == BadgeKind::PullRequest {
-            Vec::new()
-        } else {
-            vec![self.full_ref.clone()]
+        match self.kind {
+            BadgeKind::PullRequest => Vec::new(),
+            BadgeKind::Branch if self.local || !self.remotes.is_empty() => self
+                .local
+                .then(|| self.full_ref.clone())
+                .into_iter()
+                .chain(
+                    self.remotes
+                        .iter()
+                        .map(|r| format!("refs/remotes/{r}/{}", self.label)),
+                )
+                .collect(),
+            _ => vec![self.full_ref.clone()],
         }
     }
 
@@ -118,7 +127,7 @@ impl Badge {
 }
 
 /// Turns `git log --format=%D` decorations into pills: `x` and `origin/x` at the same commit
-/// remain separate selectable pills.
+/// combine into one pill with both local and remote marks.
 #[cfg(test)]
 pub(super) fn badges(decorations: &[String], refs: &Refs) -> Vec<Badge> {
     if decorations.is_empty() {
@@ -217,20 +226,23 @@ impl BadgeIndex {
                 Some(r) => format!("refs/remotes/{r}/{name}"),
                 None => format!("refs/heads/{name}"),
             };
-            if let Some(&i) = indices.get(&full) {
+            if let Some(&i) = indices.get(name) {
+                if remote.is_none() {
+                    out[i].full_ref = full;
+                }
                 return i;
             }
             let i = out.len();
             out.push(Badge {
                 label: name.to_owned(),
                 caption: name.to_owned(),
-                full_ref: full.clone(),
+                full_ref: full,
                 kind: BadgeKind::Branch,
                 local: false,
                 remotes: Vec::new(),
                 head: false,
             });
-            indices.insert(full, i);
+            indices.insert(name.to_owned(), i);
             i
         }
         let mut indices = HashMap::new();
@@ -339,6 +351,12 @@ impl BadgeIndex {
             }
             badge.remotes.sort();
             badge.remotes.dedup();
+            if badge.kind == BadgeKind::Branch
+                && !badge.local
+                && let Some(first) = badge.remotes.first()
+            {
+                badge.full_ref = format!("refs/remotes/{first}/{}", badge.label);
+            }
         }
         for badge in &mut out {
             if let Some(full) = badge.full_refs().first()

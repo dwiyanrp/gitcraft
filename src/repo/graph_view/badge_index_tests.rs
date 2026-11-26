@@ -18,12 +18,11 @@ fn one_index_resolves_thousands_of_distinct_decorated_commits() {
     for i in 0..3000 {
         let name = format!("feature-{i}");
         let badges = index.badges(&[name.clone(), format!("origin/{name}")]);
-        assert_eq!(badges.len(), 2);
+        assert_eq!(badges.len(), 1);
         assert_eq!(badges[0].label, name);
         assert!(badges[0].local);
-        assert!(badges[0].remotes.is_empty());
-        assert_eq!(badges[1].remotes, ["origin"]);
-        assert_eq!(badges[1].full_ref, format!("refs/remotes/origin/{name}"));
+        assert_eq!(badges[0].remotes, ["origin"]);
+        assert_eq!(badges[0].full_ref, format!("refs/heads/{name}"));
     }
 }
 

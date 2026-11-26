@@ -83,10 +83,12 @@ pub(crate) fn labels(entries: &[Entry], preferred: Option<&str>) -> BTreeMap<Str
             .owner
             .as_deref()
             .filter(|owner| owners.get(owner).is_some_and(|rs| rs.len() == 1));
-        let candidates = owner
-            .map(|o| format!("{o}/{}", e.path))
+        let candidates = e
+            .remote
+            .as_ref()
+            .map(|r| format!("{r}/{}", e.path))
             .into_iter()
-            .chain(e.remote.as_ref().map(|r| format!("{r}/{}", e.path)))
+            .chain(owner.map(|o| format!("{o}/{}", e.path)))
             .chain(std::iter::once(e.full_ref.clone()));
         for caption in candidates {
             if (caption == e.full_ref || !reserved.contains(caption.as_str()))

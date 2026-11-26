@@ -22,15 +22,15 @@ fn compact_preferred_and_missing_preferred() {
     ];
     let got = labels(&entries, None);
     assert_eq!(caption(&got, "origin", "topic"), "topic");
-    assert_eq!(caption(&got, "fork", "topic"), "alice/topic");
+    assert_eq!(caption(&got, "fork", "topic"), "fork/topic");
     let entries = [
         remote("origin", "main", None),
         remote("a", "topic", Some("alice")),
         remote("b", "topic", Some("bob")),
     ];
     let got = labels(&entries, None);
-    assert_eq!(caption(&got, "a", "topic"), "alice/topic");
-    assert_eq!(caption(&got, "b", "topic"), "bob/topic");
+    assert_eq!(caption(&got, "a", "topic"), "a/topic");
+    assert_eq!(caption(&got, "b", "topic"), "b/topic");
 }
 
 #[test]

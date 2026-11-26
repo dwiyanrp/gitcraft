@@ -98,9 +98,21 @@ impl RepoTab {
     /// branches share its tip and the ordinary ordering would put it behind `+N`.
     fn graph_badges(&self, commit: &git::Commit) -> Vec<Badge> {
         let mut badges = self.graph_badge_index.badges(&commit.refs);
-        badges.retain(|b| {
-            b.kind != BadgeKind::Branch || b.head || self.visibility.shows(&b.full_ref)
-        });
+        for badge in &mut badges {
+            if badge.kind == BadgeKind::Branch {
+                badge.remotes.retain(|r| {
+                    self.visibility
+                        .shows(&format!("refs/remotes/{r}/{}", badge.label))
+                });
+                if badge.local && !badge.head && !self.visibility.shows(&badge.full_ref) {
+                    badge.local = false;
+                    if let Some(first) = badge.remotes.first() {
+                        badge.full_ref = format!("refs/remotes/{first}/{}", badge.label);
+                    }
+                }
+            }
+        }
+        badges.retain(|b| b.kind != BadgeKind::Branch || b.head || b.local || !b.remotes.is_empty());
         if let Some(compare) = &self.compare {
             let focused = match badges.iter().position(|badge| {
                 badge.kind == BadgeKind::Branch

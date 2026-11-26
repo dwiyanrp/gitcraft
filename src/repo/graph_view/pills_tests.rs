@@ -230,7 +230,7 @@ fn minimum_column_keeps_dev_and_the_extra_refs_count_visible() {
     for shape in &output.shapes {
         if let egui::epaint::Shape::Text(text) = &shape.shape {
             let label = text.galley.text();
-            if label == "dev" || label == "+2" {
+            if label == "dev" || label == "+1" {
                 assert!(text.pos.x >= shape.clip_rect.left());
                 assert!(text.pos.x + text.galley.size().x <= shape.clip_rect.right());
                 names.push(label);
@@ -242,7 +242,7 @@ fn minimum_column_keeps_dev_and_the_extra_refs_count_visible() {
         "the short branch name must stay whole"
     );
     assert!(
-        names.contains(&"+2"),
+        names.contains(&"+1"),
         "the extra refs count must stay reachable"
     );
     output.textures_delta.clear();
