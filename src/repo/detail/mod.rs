@@ -235,7 +235,7 @@ fn horizontal_files(
                 )
                 .size()
                 .x
-                + 160.0
+                + 100.0
         })
         .fold(ui.available_width(), f32::max);
     egui::ScrollArea::horizontal()

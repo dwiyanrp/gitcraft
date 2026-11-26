@@ -385,7 +385,7 @@ impl RepoTab {
             egui::Panel::right("repo_detail")
                 .resizable(true)
                 .default_size(420.0)
-                .size_range(0.0..=900.0)
+                .size_range(340.0..=900.0)
                 .frame(side),
             |ui, open| {
                 widgets::panel_footer(ui, "repo_detail_footer", area.right(), true, |ui| {
