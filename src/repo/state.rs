@@ -312,9 +312,13 @@ pub(crate) struct Reword {
 pub(crate) enum CompareCaption {
     OriginalFix,
     AdaptedFix,
+    #[allow(dead_code)]
     BeforeTurn { number: u32 },
+    #[allow(dead_code)]
     Turn { number: u32, label: String },
+    #[allow(dead_code)]
     AfterTurn { number: u32 },
+    #[allow(dead_code)]
     Now,
     OriginalBranch { branch: String },
     CandidateBranch { branch: String },

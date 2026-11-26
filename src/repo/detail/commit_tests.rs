@@ -1,4 +1,5 @@
 use super::*;
+use egui_kittest::kittest::Queryable;
 
 /// What has the keyboard when a key is pressed with the reword editor open.
 #[derive(Clone, Copy, PartialEq)]
@@ -103,4 +104,49 @@ fn ctrl_enter_elsewhere_does_not_save_a_reword() {
     assert_eq!(press(Focus::FieldAfter, true), None);
     assert_eq!(press(Focus::Nothing, true), Some(true));
     assert_eq!(press(Focus::Summary, true), Some(true));
+}
+
+/// Clicking an editable commit message box enters reword edit mode.
+#[test]
+fn clicking_commit_message_enters_edit_mode() {
+    let detail = crate::git::CommitDetail {
+        hash: "a".repeat(40),
+        parents: vec!["b".repeat(40)],
+        author: "Author".into(),
+        email: "author@example.invalid".into(),
+        author_date: "2026-11-26 10:00:00 +0000".into(),
+        committer: "Author".into(),
+        commit_date: "2026-11-26 10:00:00 +0000".into(),
+        message: "fix: initial title\n\nBody details".into(),
+        files: Vec::new(),
+        in_head: true,
+        merges_after: false,
+    };
+    let mut styled = false;
+    let mut h = egui_kittest::Harness::builder()
+        .with_size([400.0, 400.0])
+        .build_ui_state(
+            move |ui, (reword, acts): &mut (Option<Reword>, Vec<Action>)| {
+                if !styled {
+                    crate::theme::install_fonts(ui.ctx());
+                    crate::theme::apply(
+                        ui.ctx(),
+                        &crate::theme::ThemeId::default(),
+                        &crate::theme::Tweaks::default(),
+                    );
+                    styled = true;
+                    return;
+                }
+                message_section(ui, acts, &detail, reword, true, 300.0);
+            },
+            (None, Vec::new()),
+        );
+    for _ in 0..3 {
+        h.step();
+    }
+    h.get_by_label_contains("Body details").click();
+    h.step();
+    let reword = h.state().0.as_ref().expect("click should enter edit mode");
+    assert_eq!(reword.subject, "fix: initial title");
+    assert_eq!(reword.body, "Body details");
 }

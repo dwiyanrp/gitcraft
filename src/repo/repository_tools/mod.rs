@@ -88,6 +88,7 @@ pub(crate) enum Act {
     ),
     CommitList(Box<crate::git::drafts::lists::View>, String),
     ShelveList(Box<crate::git::drafts::lists::View>, String, bool),
+    #[allow(dead_code)]
     Turn(String, String, String),
     AggregateTurn(String, String),
     FinishAggregate(Box<crate::git::drafts::turn::Review>),

@@ -73,6 +73,7 @@ pub(crate) enum AgentAct {
     /// Installs the hooks that save each agent turn, in the worktree this tab shows.
     InstallHooks,
     /// Deletes the saved turns of a session.
+    #[allow(dead_code)]
     ForgetTurns(String),
     /// Starts a note for the agent on a line of the diff shown.
     OpenNote(crate::repo::pr_review::LineTarget),

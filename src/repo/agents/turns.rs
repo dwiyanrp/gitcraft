@@ -2,6 +2,8 @@
 //! worktree, each labelled with its prompt; a click diffs the turn against the one before it.
 //! The latest session shows; earlier ones fold away.
 
+#![allow(dead_code)]
+
 use egui::{RichText, Ui};
 
 use super::AgentAct;

@@ -30,21 +30,6 @@ impl RepoTab {
             crate::i18n::text("repo-core-0811"),
             branch_tree::files_toggle,
         );
-
-        ui.horizontal_wrapped(|ui| {
-            if ui
-                .button(crate::i18n::text("repo-core-0812"))
-                .on_hover_text(crate::i18n::text("repo-core-0813"))
-                .clicked()
-            {
-                acts.push(Action::EarlierVersions);
-            }
-            self.review_all_button(
-                ui,
-                crate::repo::review_workflow::ReviewSource::Working,
-                acts,
-            );
-        });
         // Keep both staging and composition reachable after reopening in a short window.
         // Always use the same scroll container, so resizing preserves editor/scroll state.
         let frame = egui::Frame::new()
@@ -88,7 +73,6 @@ impl RepoTab {
                 if !self.work.conflicted.is_empty() {
                     self.conflicted_list(ui, acts);
                 }
-                self.agent_turns(ui, acts);
                 self.unstaged_list(ui, acts);
                 self.staged_list(ui, acts);
                 self.cochange_hints(ui, acts);
@@ -320,9 +304,6 @@ impl RepoTab {
                 RowClick::None | RowClick::Pick => {}
             },
         );
-        if staged.is_empty() {
-            empty_hint(ui, crate::i18n::text("repo-core-0846"));
-        }
     }
 }
 

@@ -75,7 +75,7 @@ pub(super) fn fitted_message(
         Sense::hover()
     };
     let gap = ui.spacing().item_spacing.y;
-    let budget = room - gap;
+    let budget = (room - gap - 30.0).max(0.0);
     let title = RichText::new(subject).font(theme::semibold(15.0));
     let desc = RichText::new(body).color(t.text_dim);
     let (title_rows, title_h) = text_rows(ui, title.clone());
@@ -117,6 +117,15 @@ pub(super) fn fitted_message(
         (Some(m), None) => Some(m.to_owned()),
         (None, h) => h.map(str::to_owned),
     };
+    let hover = |r: egui::Response| {
+        if editable && r.hovered() {
+            r.ctx.set_cursor_icon(egui::CursorIcon::PointingHand);
+        }
+        match &tip {
+            Some(tip) => r.on_hover_text(tip.as_str()),
+            None => r,
+        }
+    };
     let message = |ui: &mut Ui, text: RichText, rows: usize| {
         let job = clamped(ui, text, rows);
         let r = ui.add(
@@ -125,17 +134,37 @@ pub(super) fn fitted_message(
                 .sense(sense)
                 .show_tooltip_when_elided(false),
         );
-        match &tip {
-            Some(tip) => r.on_hover_text(tip.as_str()),
-            None => r,
-        }
-        .double_clicked()
+        hover(r).clicked()
     };
-    let mut clicked = message(ui, title, show_title);
-    if show_body > 0 {
-        ui.add_space(2.0);
-        clicked |= message(ui, desc, show_body);
-    }
+    let clicked = egui::Frame::new()
+        .fill(t.field)
+        .stroke(egui::Stroke::new(1.0, t.field_border))
+        .corner_radius(t.radius)
+        .inner_margin(egui::Margin::symmetric(10, 8))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            let mut clicked = message(ui, title, show_title);
+            ui.add_space(4.0);
+            ui.separator();
+            ui.add_space(4.0);
+            if show_body > 0 {
+                clicked |= message(ui, desc, show_body);
+            } else {
+                let empty = ui.add(
+                    egui::Label::new(
+                        RichText::new(crate::i18n::text("repo-core-0887")).color(t.text_faint),
+                    )
+                    .sense(sense),
+                );
+                clicked |= hover(empty).clicked();
+            }
+            // Keep the description section taller than the title and clickable across its area.
+            let extra_h = if show_body <= 2 { 36.0 } else { 8.0 };
+            let pad = ui.allocate_response(vec2(ui.available_width(), extra_h), sense);
+            clicked |= hover(pad).clicked();
+            clicked
+        })
+        .inner;
     if foldable {
         expander(ui, unfolded);
     }

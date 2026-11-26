@@ -9,6 +9,7 @@ use egui::{RichText, Ui};
 /// Reload behavior is explicit: historical objects stay pinned; live sources enumerate anew.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ReviewSource {
+    #[allow(dead_code)]
     Working,
     Commit(String),
     Comparison { from: String, to: Option<String> },

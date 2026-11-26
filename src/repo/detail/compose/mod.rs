@@ -349,38 +349,51 @@ impl RepoTab {
         ui: &mut Ui,
         enabled: bool,
     ) -> (egui::Response, egui::Response) {
+        let t = Tokens::get(ui.ctx());
         let cands = self.completion_candidates(ui.ctx());
         let mut open = self.compose.completion.take();
         let (summary, body) = ui
             .add_enabled_ui(enabled, |ui| {
-                let summary = complete::field(
-                    ui,
-                    &mut self.commit_summary,
-                    |text| {
-                        egui::TextEdit::singleline(text)
-                            .hint_text(crate::i18n::text("repo-core-0886"))
-                            .desired_width(f32::INFINITY)
-                            .margin(egui::Margin::symmetric(8, 6))
-                    },
-                    Field::Summary,
-                    &cands,
-                    &mut open,
-                );
-                let body = complete::field(
-                    ui,
-                    &mut self.commit_body,
-                    |text| {
-                        egui::TextEdit::multiline(text)
-                            .hint_text(crate::i18n::text("repo-core-0887"))
-                            .desired_width(f32::INFINITY)
-                            .desired_rows(3)
-                            .margin(egui::Margin::symmetric(8, 6))
-                    },
-                    Field::Body,
-                    &cands,
-                    &mut open,
-                );
-                (summary, body)
+                egui::Frame::new()
+                    .fill(t.field)
+                    .stroke(egui::Stroke::new(1.0, t.field_border))
+                    .corner_radius(t.radius)
+                    .inner_margin(egui::Margin::symmetric(10, 8))
+                    .show(ui, |ui| {
+                        ui.set_width(ui.available_width());
+                        let summary = complete::field(
+                            ui,
+                            &mut self.commit_summary,
+                            |text| {
+                                egui::TextEdit::singleline(text)
+                                    .frame(egui::Frame::NONE)
+                                    .hint_text(crate::i18n::text("repo-core-0886"))
+                                    .desired_width(f32::INFINITY)
+                            },
+                            Field::Summary,
+                            &cands,
+                            &mut open,
+                        );
+                        ui.add_space(4.0);
+                        ui.separator();
+                        ui.add_space(4.0);
+                        let body = complete::field(
+                            ui,
+                            &mut self.commit_body,
+                            |text| {
+                                egui::TextEdit::multiline(text)
+                                    .frame(egui::Frame::NONE)
+                                    .hint_text(crate::i18n::text("repo-core-0887"))
+                                    .desired_width(f32::INFINITY)
+                                    .desired_rows(5)
+                            },
+                            Field::Body,
+                            &cands,
+                            &mut open,
+                        );
+                        (summary, body)
+                    })
+                    .inner
             })
             .inner;
         self.compose.editor_ids = vec![summary.id, body.id];

@@ -18,23 +18,37 @@ impl Reword {
 /// `Some(false)` to cancel.
 pub(super) fn reword_editor(ui: &mut Ui, reword: &mut Reword) -> Option<bool> {
     let t = Tokens::get(ui.ctx());
-    let summary = ui.add(
-        egui::TextEdit::singleline(&mut reword.subject)
-            .font(theme::semibold(14.0))
-            .hint_text(crate::i18n::text("repo-core-0886"))
-            .desired_width(f32::INFINITY),
-    );
-    if reword.focus {
-        summary.request_focus();
-        reword.focus = false;
-    }
-    ui.add_space(4.0);
-    let body = ui.add(
-        egui::TextEdit::multiline(&mut reword.body)
-            .hint_text(crate::i18n::text("repo-core-0887"))
-            .desired_rows(4)
-            .desired_width(f32::INFINITY),
-    );
+    let (summary, body) = egui::Frame::new()
+        .fill(t.field)
+        .stroke(egui::Stroke::new(1.0, t.accent))
+        .corner_radius(t.radius)
+        .inner_margin(egui::Margin::symmetric(10, 8))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            let summary = ui.add(
+                egui::TextEdit::singleline(&mut reword.subject)
+                    .frame(egui::Frame::NONE)
+                    .font(theme::semibold(14.0))
+                    .hint_text(crate::i18n::text("repo-core-0886"))
+                    .desired_width(f32::INFINITY),
+            );
+            if reword.focus {
+                summary.request_focus();
+                reword.focus = false;
+            }
+            ui.add_space(4.0);
+            ui.separator();
+            ui.add_space(4.0);
+            let body = ui.add(
+                egui::TextEdit::multiline(&mut reword.body)
+                    .frame(egui::Frame::NONE)
+                    .hint_text(crate::i18n::text("repo-core-0887"))
+                    .desired_rows(6)
+                    .desired_width(f32::INFINITY),
+            );
+            (summary, body)
+        })
+        .inner;
     ui.add_space(6.0);
     let can_save = !reword.subject.trim().is_empty();
     // The keys are the editor's from its own fields, or when nothing else has them: Escape in
