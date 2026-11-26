@@ -90,8 +90,8 @@ fn a_long_description_folds_behind_show_more_and_comes_back_whole() {
         // Folded, the description is cut short on screen (its whole text stays readable to
         // screen readers and on hover).
         let folded = h.get_by_label_contains("First paragraph").rect().height();
-        // The files switch is gone from the header; the file list is right there.
-        assert!(h.query_by_label("Tree").is_none() && h.query_by_label("Path").is_none());
+        // The file list is right there with its Path/Tree presentation switch.
+        assert!(h.query_by_label("Tree").is_some() && h.query_by_label("Path").is_some());
         assert!(h.query_by_label_contains("file.rs").is_some());
         crate::repo::detail::responsive_tests::evidence(&mut h, &format!("compact-folded-{width}"));
         h.get_by_label("Show more").click();

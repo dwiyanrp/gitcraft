@@ -186,6 +186,7 @@ impl RepoTab {
             files_header_with(ui, &detail.files, note, |ui| {
                 self.all_files_toggle(ui, acts)
             });
+            self.commit_files_toolbar(ui, detail);
         }
         self.remerge_toggle(ui, acts, &remerge);
         ui.spacing_mut().item_spacing.y = 0.0;
@@ -206,6 +207,58 @@ impl RepoTab {
                 },
             );
         }
+    }
+
+    /// Path/Tree presentation switch (for changed files) and Collapse/Expand all (for Tree view).
+    fn commit_files_toolbar(&self, ui: &mut Ui, detail: &CommitDetail) {
+        let as_tree = self.all_files.on || crate::settings::Settings::get(ui.ctx()).commit_files_as_tree;
+        if self.all_files.on && !matches!(&self.all_files.files, Some(Ok(_))) {
+            return;
+        }
+        egui::Frame::new()
+            .inner_margin(egui::Margin::symmetric(10, 4))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    if !self.all_files.on {
+                        let mut settings = crate::settings::Settings::get(ui.ctx());
+                        let on = usize::from(settings.commit_files_as_tree);
+                        if let Some(picked) = widgets::switch(
+                            ui,
+                            &[
+                                crate::i18n::text("repo-core-0250"),
+                                crate::i18n::text("repo-core-0251"),
+                            ],
+                            on,
+                        ) {
+                            settings.commit_files_as_tree = picked == 1;
+                            settings.set(ui.ctx());
+                        }
+                    }
+                    if as_tree {
+                        if self.all_files.on {
+                            if let Some(Ok(files)) = &self.all_files.files
+                                && self.all_files.of.as_ref() == Some(&detail.hash)
+                            {
+                                super::all_files::folders_toggle(
+                                    ui,
+                                    egui::Id::new(("file-folder", self.repo_key(), "all")),
+                                    false,
+                                    files,
+                                    |p| p.as_str(),
+                                );
+                            }
+                        } else {
+                            super::all_files::folders_toggle(
+                                ui,
+                                egui::Id::new(("file-folder", self.repo_key(), "commit")),
+                                true,
+                                &detail.files,
+                                |f| f.path.as_str(),
+                            );
+                        }
+                    }
+                });
+            });
     }
 
     /// The selected commit as the graph read it, for the detail pane while git's read of it is

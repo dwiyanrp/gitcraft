@@ -9,7 +9,6 @@ use crate::git::{ChangedFile, CommitDetail};
 use crate::repo::file_view::FileTab;
 use crate::repo::widgets::{self, RowExtra};
 use crate::repo::{Action, RepoTab, branch_tree};
-use crate::settings::Settings;
 use crate::theme::Tokens;
 
 #[derive(Default)]
@@ -115,7 +114,7 @@ impl RepoTab {
             ui.push_id(("all-files", &detail.hash), |ui| {
                 reveal = branch_tree::files(
                     ui,
-                    (id, false, Settings::get(ui.ctx()).commit_files_as_tree),
+                    (id, false, true),
                     files,
                     |p| p.as_str(),
                     &|p: &&String| shown(p),
@@ -176,5 +175,54 @@ impl RepoTab {
         if let Some(rect) = reveal {
             ui.scroll_to_rect(rect, Some(egui::Align::Center));
         }
+    }
+}
+
+/// Renders an "Expand all" / "Collapse all" button for a `branch_tree` when it has folders.
+pub(super) fn folders_toggle<'a, T>(
+    ui: &mut Ui,
+    id: egui::Id,
+    start_open: bool,
+    files: &'a [T],
+    path: impl Fn(&'a T) -> &'a str,
+) {
+    let mut tree = branch_tree::build(files.iter().map(|f| (path(f), f)));
+    branch_tree::compact(&mut tree);
+    let mut folders = Vec::new();
+    let mut levels = vec![tree.as_slice()];
+    while let Some(nodes) = levels.pop() {
+        for node in nodes {
+            if let branch_tree::Node::Folder(folder) = node {
+                folders.push(folder.path);
+                levels.push(&folder.children);
+            }
+        }
+    }
+    if folders.is_empty() {
+        return;
+    }
+    let any_collapsed = ui.data_mut(|d| {
+        folders.iter().any(|p| {
+            let saved = d.get_persisted::<bool>(id.with(*p)).unwrap_or(false);
+            saved == start_open
+        })
+    });
+    let label = if any_collapsed {
+        "Expand all"
+    } else {
+        "Collapse all"
+    };
+    if ui.small_button(label).clicked() {
+        let want_saved = any_collapsed != start_open;
+        ui.data_mut(|d| {
+            for p in folders {
+                let key = id.with(p);
+                if want_saved {
+                    d.insert_persisted(key, true);
+                } else {
+                    d.remove::<bool>(key);
+                }
+            }
+        });
     }
 }

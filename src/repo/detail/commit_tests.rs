@@ -150,3 +150,93 @@ fn clicking_commit_message_enters_edit_mode() {
     assert_eq!(reword.subject, "fix: initial title");
     assert_eq!(reword.body, "Body details");
 }
+
+#[test]
+fn commit_files_support_path_tree_all_files_and_collapse_expand() {
+    let ctx = egui::Context::default();
+    let mut tab = RepoTab::new_deferred("/224/commit-files-ui".into(), &ctx);
+    let hash = "a".repeat(40);
+    tab.detail_hash = Some(hash.clone());
+    tab.detail = Some(crate::git::CommitDetail {
+        hash: hash.clone(),
+        parents: vec!["b".repeat(40)],
+        author: "Author".into(),
+        email: "author@example.invalid".into(),
+        author_date: "2026-11-26 10:00:00 +0000".into(),
+        committer: "Author".into(),
+        commit_date: "2026-11-26 10:00:00 +0000".into(),
+        message: "test commit".into(),
+        files: vec![crate::git::ChangedFile {
+            path: "src/changed.rs".into(),
+            old_path: None,
+            status: 'M',
+            added: Some(1),
+            removed: Some(0),
+        }],
+        in_head: true,
+        merges_after: false,
+    });
+    tab.all_files.of = Some(hash);
+    tab.all_files.files = Some(Ok(vec![
+        "src/changed.rs".into(),
+        "docs/unchanged.md".into(),
+    ]));
+
+    let mut styled = false;
+    let mut h = egui_kittest::Harness::builder()
+        .with_size([400.0, 800.0])
+        .build_ui_state(
+            move |ui, (tab, acts): &mut (RepoTab, Vec<Action>)| {
+                if !styled {
+                    crate::theme::install_fonts(ui.ctx());
+                    crate::theme::apply(
+                        ui.ctx(),
+                        &crate::theme::ThemeId::default(),
+                        &crate::theme::Tweaks::default(),
+                    );
+                    egui_extras::install_image_loaders(ui.ctx());
+                    styled = true;
+                    return;
+                }
+                egui::CentralPanel::default().show(ui, |ui| tab.commit_panel(ui, acts));
+            },
+            (tab, Vec::new()),
+        );
+    for _ in 0..4 {
+        h.step();
+    }
+
+    // 1. Default Tree view for changed files: folder shown + Collapse all button.
+    assert!(h.query_by_label_contains("folder src").is_some());
+    assert!(h.query_by_label_contains("changed.rs").is_some());
+    h.get_by_label("Collapse all").click();
+    h.step();
+    assert!(h.query_by_label_contains("changed.rs").is_none());
+    h.get_by_label("Expand all").click();
+    h.step();
+    assert!(h.query_by_label_contains("changed.rs").is_some());
+
+    // 2. Switch to Path view for changed files: flat list, no folder node, no Collapse/Expand.
+    h.get_by_label("Path").click();
+    h.step();
+    h.step();
+    assert!(h.query_by_label_contains("folder src").is_none());
+    assert!(h.query_by_label("Collapse all").is_none());
+    assert!(h.query_by_label("Expand all").is_none());
+    assert!(h.query_by_label_contains("src/changed.rs").is_some());
+
+    // 3. View all files always renders in Tree view with Expand all / Collapse all.
+    h.state_mut().0.all_files.on = true;
+    h.step();
+    h.step();
+    assert!(h.query_by_label_contains("folder docs").is_some());
+    assert!(h.query_by_label_contains("unchanged.md").is_none());
+    h.get_by_label("Expand all").click();
+    h.step();
+    h.step();
+    assert!(h.query_by_label_contains("unchanged.md").is_some());
+    h.get_by_label("Collapse all").click();
+    h.step();
+    h.step();
+    assert!(h.query_by_label_contains("unchanged.md").is_none());
+}
