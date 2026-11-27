@@ -273,5 +273,60 @@ fn only_the_tracked_remote_pill_of_the_checked_out_branch_pulls() {
     );
 }
 
+#[test]
+fn hovering_primary_branch_pill_opens_stack_when_commit_has_multiple_refs() {
+    use crate::repo::graph_view::readability_tests::painted_text_center;
+    use egui::Event;
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    let mut tab = RepoTab::new_deferred("/recording-only/pill-hover".into(), &ctx);
+    tab.refs = Refs {
+        current: Some("main".into()),
+        ..Refs::default()
+    };
+    tab.commits.push(std::sync::Arc::new(crate::git::Commit {
+        hash: "a".repeat(40),
+        refs: vec!["HEAD -> main".into(), "b".into()],
+        ..Default::default()
+    }));
+    tab.graph = crate::graph::layout(&tab.commits);
+    tab.rebuild_graph_labels();
+
+    let mut frame = |events| {
+        let mut acts = Vec::new();
+        let (mut output, _) = crate::repo::messages::record_jobs(|| {
+            ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1200.0, 800.0))),
+                    events,
+                    ..Default::default()
+                },
+                |ui| {
+                    egui::CentralPanel::default().show(ui, |ui| {
+                        tab.graph_view(ui, &mut acts);
+                    });
+                },
+            )
+        });
+        output.textures_delta.clear();
+        output.shapes
+    };
+
+    frame(Vec::new());
+    let shapes = frame(Vec::new());
+    let pill_pos = painted_text_center(&shapes, "main");
+    frame(vec![Event::PointerMoved(pill_pos)]);
+    let hovered_shapes = frame(Vec::new());
+    let texts: Vec<&str> = hovered_shapes
+        .iter()
+        .filter_map(|s| match &s.shape {
+            egui::epaint::Shape::Text(t) => Some(t.galley.text()),
+            _ => None,
+        })
+        .collect();
+    assert!(texts.contains(&"main"), "texts: {texts:?}");
+    assert!(texts.contains(&"b"), "texts: {texts:?}");
+}
+
 #[path = "pills_review_tests.rs"]
 mod review_tests;

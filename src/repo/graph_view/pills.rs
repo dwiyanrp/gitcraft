@@ -134,7 +134,16 @@ impl RepoTab {
         let dragging = self.dragged(ui.ctx()).is_some();
         if !dragging && let Some(more) = more_rect {
             let at = pos2(rect.left() + 2.0, mid - 16.0);
-            self.ref_stack(ui, &badges, row.i, more, at, cols, row.color, acts);
+            self.ref_stack(
+                ui,
+                &badges,
+                row.i,
+                pill.union(more),
+                at,
+                cols,
+                row.color,
+                acts,
+            );
         }
         (resp, hit)
     }
@@ -237,8 +246,8 @@ impl RepoTab {
         }
     }
 
-    /// While the pointer is on a row's `+N` (or on the list itself), every pill of the commit
-    /// stacked over the row, to pick one to check out. Returns whether it is open.
+    /// While the pointer is on a row's pill or `+N` (or on the list itself), every pill of the
+    /// commit stacked over the row, to pick one to check out. Returns whether it is open.
     #[allow(clippy::too_many_arguments)]
     fn ref_stack(
         &self,
