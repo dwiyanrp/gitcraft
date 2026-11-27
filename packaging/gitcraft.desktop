@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=gitcraft
+Name=Gitcraft
 Comment=A small visual git client
 Exec=gitcraft %f
 Terminal=false
@@ -18,5 +18,5 @@ Name=Open…
 Exec=gitcraft --open
 
 [Desktop Action quit]
-Name=Quit gitcraft
+Name=Quit Gitcraft
 Exec=gitcraft --quit

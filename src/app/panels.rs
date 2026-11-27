@@ -289,8 +289,8 @@ fn notify(text: &str) {
     let text = notification_body(text);
     std::thread::spawn(move || {
         let _ = notify_rust::Notification::new()
-            .appname("gitcraft")
-            .summary("gitcraft")
+            .appname("Gitcraft")
+            .summary("Gitcraft")
             .body(&text)
             .show();
     });

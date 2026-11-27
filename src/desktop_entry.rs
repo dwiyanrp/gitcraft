@@ -186,7 +186,7 @@ fn package_entry(items: &[crate::os_shell::MenuItem]) -> String {
     format!(
         "[Desktop Entry]\n\
          Type=Application\n\
-         Name=gitcraft\n\
+         Name=Gitcraft\n\
          Comment={description}\n\
          Exec=gitcraft %f\n\
          TryExec=gitcraft\n\
@@ -239,7 +239,7 @@ fn link_entry(appimage: &Path) -> String {
     format!(
         "[Desktop Entry]\n\
          Type=Application\n\
-         Name=gitcraft links\n\
+         Name=Gitcraft links\n\
          Comment={description}\n\
          Exec={exec} %u\n\
          Terminal=false\n\
@@ -257,7 +257,7 @@ fn entry(appimage: &Path) -> String {
     format!(
         "[Desktop Entry]\n\
          Type=Application\n\
-         Name=gitcraft\n\
+         Name=Gitcraft\n\
          Comment={description}\n\
          Exec={exec} %f\n\
          TryExec={}\n\

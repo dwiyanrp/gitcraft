@@ -89,11 +89,11 @@ jobs:
           # Both architectures, signed, and the disk image is sound.
           mkdir check
           ditto -x -k "$name.zip" check
-          lipo -archs check/gitcraft.app/Contents/MacOS/gitcraft
-          lipo -archs check/gitcraft.app/Contents/MacOS/gitcraft | grep -q x86_64
-          lipo -archs check/gitcraft.app/Contents/MacOS/gitcraft | grep -q arm64
-          codesign --verify --strict check/gitcraft.app
-          plutil -lint check/gitcraft.app/Contents/Info.plist
+          lipo -archs check/Gitcraft.app/Contents/MacOS/gitcraft
+          lipo -archs check/Gitcraft.app/Contents/MacOS/gitcraft | grep -q x86_64
+          lipo -archs check/Gitcraft.app/Contents/MacOS/gitcraft | grep -q arm64
+          codesign --verify --strict check/Gitcraft.app
+          plutil -lint check/Gitcraft.app/Contents/Info.plist
           hdiutil verify "$name.dmg"
 
       - name: Package (Windows)

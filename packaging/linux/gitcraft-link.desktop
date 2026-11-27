@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=gitcraft links
+Name=Gitcraft links
 Comment=Opens gitcraft:// links from the browser in gitcraft
 Exec=gitcraft %u
 Terminal=false

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>gitcraft</string>
+	<string>Gitcraft</string>
 	<key>CFBundleDisplayName</key>
-	<string>gitcraft</string>
+	<string>Gitcraft</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.github.vancete.gitcraft</string>
 	<key>CFBundleExecutable</key>

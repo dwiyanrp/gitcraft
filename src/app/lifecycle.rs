@@ -145,7 +145,7 @@ pub fn tell(message: &str, error: bool) {
         (false, false) => {
             let _ = rfd::MessageDialog::new()
                 .set_level(rfd::MessageLevel::Info)
-                .set_title("gitcraft")
+                .set_title("Gitcraft")
                 .set_description(message)
                 .set_buttons(rfd::MessageButtons::Ok)
                 .show();
@@ -164,15 +164,15 @@ fn report_displayed_start(message: &str) {
     // menu would end with nothing shown: a desktop notification says it instead.
     if cfg!(all(unix, not(target_os = "macos"))) && !on_path("zenity") {
         let _ = notify_rust::Notification::new()
-            .appname("gitcraft")
-            .summary("gitcraft")
+            .appname("Gitcraft")
+            .summary("Gitcraft")
             .body(&panels::notification_body(message))
             .show();
         return;
     }
     let _ = rfd::MessageDialog::new()
         .set_level(rfd::MessageLevel::Error)
-        .set_title("gitcraft")
+        .set_title("Gitcraft")
         .set_description(message)
         .set_buttons(rfd::MessageButtons::Ok)
         .show();

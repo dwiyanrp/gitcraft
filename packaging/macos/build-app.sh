@@ -1,5 +1,5 @@
 #!/bin/sh
-# Packs the Apple silicon and Intel builds into one universal gitcraft.app, then a .dmg (drag
+# Packs the Apple silicon and Intel builds into one universal Gitcraft.app, then a .dmg (drag
 # to Applications) and a .zip of it.
 # Usage: packaging/macos/build-app.sh <version> <output name without extension>
 # Needs both `cargo build --release --target aarch64-apple-darwin` and
@@ -9,7 +9,7 @@ set -eu
 version="$1"
 out="$2"
 work="$(mktemp -d)"
-app="$work/gitcraft.app"
+app="$work/Gitcraft.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
 lipo -create -output "$app/Contents/MacOS/gitcraft" \
@@ -41,4 +41,4 @@ dmg="$work/dmg"
 mkdir "$dmg"
 cp -R "$app" "$dmg/"
 ln -s /Applications "$dmg/Applications"
-hdiutil create -volname gitcraft -srcfolder "$dmg" -ov -format UDZO "$out.dmg"
+hdiutil create -volname Gitcraft -srcfolder "$dmg" -ov -format UDZO "$out.dmg"

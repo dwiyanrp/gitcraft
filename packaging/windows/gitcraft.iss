@@ -12,14 +12,14 @@
 
 [Setup]
 AppId={{86F6EE51-215B-489E-BB29-402DC3170FC5}
-AppName=gitcraft
+AppName=Gitcraft
 AppVersion={#AppVersion}
-AppVerName=gitcraft {#AppVersion}
+AppVerName=Gitcraft {#AppVersion}
 AppPublisher=Iván
 AppPublisherURL=https://github.com/Vancete/gitcraft
 AppSupportURL=https://github.com/Vancete/gitcraft/issues
 AppUpdatesURL=https://github.com/Vancete/gitcraft/releases
-DefaultDirName={autopf}\gitcraft
+DefaultDirName={autopf}\Gitcraft
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -29,7 +29,7 @@ OutputDir={#Root}\dist
 OutputBaseFilename={#OutputName}
 SetupIconFile={#Root}\assets\app-icon\gitcraft.ico
 UninstallDisplayIcon={app}\gitcraft.exe
-UninstallDisplayName=gitcraft
+UninstallDisplayName=Gitcraft
 LicenseFile={#Root}\LICENSE-MIT
 Compression=lzma2/max
 SolidCompression=yes
@@ -54,8 +54,8 @@ Source: "{#Root}\LICENSE-APACHE"; DestDir: "{app}"; Flags: ignoreversion
 Type: files; Name: "{app}\gitcraft.exe.old"
 
 [Icons]
-Name: "{autoprograms}\gitcraft"; Filename: "{app}\gitcraft.exe"
-Name: "{autodesktop}\gitcraft"; Filename: "{app}\gitcraft.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Gitcraft"; Filename: "{app}\gitcraft.exe"
+Name: "{autodesktop}\Gitcraft"; Filename: "{app}\gitcraft.exe"; Tasks: desktopicon
 
 [Registry]
 ; "Open in gitcraft" on a folder and on a folder's background (HKCU or HKLM, per install mode).
@@ -79,4 +79,4 @@ Root: HKA; Subkey: "Software\Classes\gitcraft\DefaultIcon"; ValueType: string; V
 Root: HKA; Subkey: "Software\Classes\gitcraft\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\gitcraft.exe"" ""%1"""; Tasks: links
 
 [Run]
-Filename: "{app}\gitcraft.exe"; Description: "{cm:LaunchProgram,gitcraft}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\gitcraft.exe"; Description: "{cm:LaunchProgram,Gitcraft}"; Flags: nowait postinstall skipifsilent

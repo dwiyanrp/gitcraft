@@ -10,8 +10,8 @@ fn main() -> std::io::Result<()> {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("assets/app-icon/gitcraft.ico")
-        .set("ProductName", "gitcraft")
-        .set("FileDescription", "gitcraft")
+        .set("ProductName", "Gitcraft")
+        .set("FileDescription", "Gitcraft")
         .set("LegalCopyright", "MIT OR Apache-2.0")
         .set("OriginalFilename", "gitcraft.exe")
         .set("InternalName", "gitcraft");

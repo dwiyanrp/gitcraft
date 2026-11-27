@@ -15,7 +15,7 @@ impl ksni::Tray for Item {
         "gitcraft".into()
     }
     fn title(&self) -> String {
-        "gitcraft".into()
+        "Gitcraft".into()
     }
     fn icon_pixmap(&self) -> Vec<ksni::Icon> {
         self.icon.clone()

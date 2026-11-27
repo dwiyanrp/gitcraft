@@ -80,7 +80,7 @@ impl Layout {
                 PathBuf::from(format!("gitcraft-{tag}-linux-x86_64")).join("gitcraft")
             }
             Layout::AppImage(_) => PathBuf::from(asset),
-            Layout::Bundle(_) => PathBuf::from("gitcraft.app"),
+            Layout::Bundle(_) => PathBuf::from("Gitcraft.app"),
         }
     }
 }
