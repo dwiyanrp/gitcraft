@@ -164,10 +164,11 @@ pub(super) fn copy_items(
     hash: &str,
     acts: &mut Vec<Action>,
 ) {
-    if MenuItem::new(crate::i18n::text("repo-core-4249"))
-        .icon("copy")
-        .show(ui)
-        .clicked()
+    if ctx.has_branch()
+        && MenuItem::new(crate::i18n::text("repo-core-4249"))
+            .icon("copy")
+            .show(ui)
+            .clicked()
     {
         ui.ctx().copy_text(ctx.name.clone());
     }

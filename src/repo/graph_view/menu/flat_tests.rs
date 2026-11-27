@@ -199,3 +199,54 @@ fn flat_menu_hides_rename_when_local_branch_is_on_another_commit() {
     assert!(h.query_by_label("Rename dev").is_none());
     h.get_by_label("Delete origin/dev");
 }
+
+#[test]
+fn flat_menu_on_commit_without_branch_shows_commit_actions() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash,
+        summary: "Earlier commit".to_owned(),
+        ..Default::default()
+    }));
+    let row_idx = t.commits.len() - 1;
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            tab.commit_menu(&row, row_idx, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    for label in [
+        "Checkout this commit",
+        "Create worktree from this commit…",
+        "Create branch here…",
+        "Cherry pick commit checking…",
+        "Rebase dev onto this commit checking…",
+        "Reset dev to this commit ⏵",
+        "Revert commit",
+    ] {
+        h.get_by_label(label);
+    }
+    for hidden in [
+        "Pull (fast-forward if possible)",
+        "Push",
+        "Set Upstream",
+        "Checkout ⏵",
+        "Create worktree from ⏵",
+        "Edit commit message",
+        "Explain branch changes (Preview)",
+        "Rename dev",
+        "Delete dev",
+        "Copy branch name",
+    ] {
+        assert!(
+            h.query_by_label(hidden).is_none(),
+            "unexpected item: {hidden}"
+        );
+    }
+}

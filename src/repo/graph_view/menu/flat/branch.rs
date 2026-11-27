@@ -11,6 +11,19 @@ pub(super) fn checkout_items(
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
+    let checked_out = crate::i18n::text("repo-core-0796");
+    if !ctx.has_branch() {
+        action_item(
+            ui,
+            crate::i18n::text("repo-core-4263"),
+            "log-in",
+            idle,
+            is_head.then_some(checked_out),
+            acts,
+            Action::Checkout(hash.to_owned()),
+        );
+        return;
+    }
     submenu(
         ui,
         hash,
@@ -41,7 +54,6 @@ pub(super) fn checkout_items(
                     Action::Checkout(b.name.clone()),
                 );
             }
-            let checked_out = crate::i18n::text("repo-core-0796");
             let response = MenuItem::new(crate::i18n::text("repo-core-4244"))
                 .icon("log-in")
                 .enabled(idle)
@@ -62,6 +74,18 @@ pub(super) fn worktree_items(
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
+    if !ctx.has_branch() {
+        action_item(
+            ui,
+            crate::i18n::text("repo-core-2644"),
+            "folder-git-2",
+            idle,
+            None,
+            acts,
+            Action::Dialog(Dialog::worktree_at(&tab.path, hash)),
+        );
+        return;
+    }
     submenu(
         ui,
         hash,

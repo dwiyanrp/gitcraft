@@ -3345,3 +3345,6 @@ repo-core-4259 = No local branch at this commit
 repo-core-4260 = No remote-tracking branch here
 repo-core-4261 = Set Upstream
 repo-core-4262 = Annotated tag message
+repo-core-4263 = Checkout this commit
+repo-core-4264 = Cherry pick commit
+repo-core-4265 = Rebase { $target } onto this commit

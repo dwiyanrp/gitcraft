@@ -13,6 +13,7 @@ pub(super) fn create_items(
     target: &str,
     merge: bool,
     is_head: bool,
+    has_branch: bool,
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
@@ -25,10 +26,15 @@ pub(super) fn create_items(
         acts,
         Action::Dialog(Dialog::create_branch(hash, short)),
     );
+    if !has_branch {
+        commit_rewrite_items(tab, ui, hash, short, target, merge, is_head, idle, acts);
+    }
     reset_item(
         tab, ui, hash, short, summary, target, merge, is_head, idle, acts,
     );
-    edit_message_item(tab, ui, hash, idle, acts);
+    if has_branch {
+        edit_message_item(tab, ui, hash, idle, acts);
+    }
     action_item(
         ui,
         crate::i18n::text("repo-core-2655"),
@@ -38,6 +44,47 @@ pub(super) fn create_items(
         acts,
         crate::repo::commit_actions::revert_action(hash, short),
     );
+}
+
+#[allow(clippy::too_many_arguments)]
+fn commit_rewrite_items(
+    tab: &RepoTab,
+    ui: &mut Ui,
+    hash: &str,
+    short: &str,
+    target: &str,
+    merge: bool,
+    is_head: bool,
+    idle: bool,
+    acts: &mut Vec<Action>,
+) {
+    let checked_out = crate::i18n::text("repo-core-0796");
+    let cherry_pick = crate::i18n::text("repo-core-4264").to_owned();
+    let picked = if merge {
+        MenuItem::new(cherry_pick)
+            .icon("command")
+            .enabled(idle)
+            .refused(is_head.then_some(checked_out))
+            .show(ui)
+    } else {
+        tab.conflict_button(ui, cherry_pick, idle && !is_head, Op::CherryPick, hash)
+    };
+    if picked.clicked() {
+        acts.push(crate::repo::commit_actions::cherry_pick_action(hash, short));
+    }
+
+    let rebase_label = crate::i18n::message("repo-core-4265", &[("target", target.to_string().into())]);
+    let rebase = tab.conflict_button(ui, rebase_label, idle && !is_head, Op::Rebase, hash);
+    offer(&rebase, || GhostOp::Rebase {
+        onto: hash.to_owned(),
+        label: short.to_owned(),
+    });
+    if rebase.clicked() {
+        acts.push(Action::AskRebase {
+            onto: hash.to_owned(),
+            label: format!("Rebase {target} onto {short}"),
+        });
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

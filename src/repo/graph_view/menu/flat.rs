@@ -35,6 +35,12 @@ pub(super) struct Context<'a> {
     pub(super) remote_name: Option<String>,
 }
 
+impl Context<'_> {
+    pub(super) fn has_branch(&self) -> bool {
+        self.local.is_some() || self.remote.is_some()
+    }
+}
+
 pub(super) fn show(
     tab: &RepoTab,
     ui: &mut Ui,
@@ -58,25 +64,45 @@ pub(super) fn show(
         .clone()
         .unwrap_or_else(|| "HEAD".to_owned());
 
-    sync_items(tab, ui, &ctx, idle, acts);
-    ui.separator();
+    let has_branch = ctx.has_branch();
+    if has_branch {
+        sync_items(tab, ui, &ctx, idle, acts);
+        ui.separator();
+    }
     checkout_items(ui, &ctx, &hash, &target, is_head, idle, acts);
+    ui.separator();
     worktree_items(tab, ui, &ctx, &hash, idle, acts);
     ui.separator();
     create_items(
-        tab, ui, &hash, &short, &summary, &target, merge, is_head, idle, acts,
+        tab,
+        ui,
+        &hash,
+        &short,
+        &summary,
+        &target,
+        merge,
+        is_head,
+        has_branch,
+        idle,
+        acts,
     );
     ui.separator();
-    review_item(tab, ui, &ctx, idle, acts);
-    ui.separator();
+    if has_branch {
+        review_item(tab, ui, &ctx, idle, acts);
+        ui.separator();
+    }
     patch_items(ui, is_head, idle, acts);
-    branch_items(tab, ui, &ctx, &hash, idle, acts);
-    ui.separator();
+    if has_branch {
+        branch_items(tab, ui, &ctx, &hash, idle, acts);
+        ui.separator();
+    }
     link_copy_items(tab, ui, &ctx, &hash, acts);
     create_patch_item(ui, &hash, &summary, merge, acts);
     ui.separator();
-    visibility_items(tab, ui, &ctx, &hash, acts);
-    ui.separator();
+    if has_branch {
+        visibility_items(tab, ui, &ctx, &hash, acts);
+        ui.separator();
+    }
     tag_items(tab, ui, &hash, &short, idle, acts);
     ui.separator();
 
@@ -123,11 +149,6 @@ fn context<'a>(tab: &'a RepoTab, i: usize, pill: Option<&'a str>) -> Context<'a>
         && let Some(n) = full.strip_prefix("refs/heads/")
     {
         local = tab.refs.local.iter().find(|b| b.name == n);
-    }
-    if local.is_none()
-        && let Some(current) = tab.refs.current.as_deref()
-    {
-        local = tab.refs.local.iter().find(|b| b.name == current);
     }
     if remote.is_none()
         && let Some(b) = local
