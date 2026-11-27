@@ -96,6 +96,42 @@ impl RepoTab {
         compare_items(ui, acts, git_ref, current);
     }
 
+    fn is_ancestor_of_head(&self, hash: &str) -> bool {
+        if hash == self.refs.head {
+            return true;
+        }
+        let (commits, index) = if self.history_index.contains_key(hash)
+            && self.history_index.contains_key(&self.refs.head)
+        {
+            (&self.history, &self.history_index)
+        } else {
+            (&self.commits, &self.index)
+        };
+        let (Some(&head_row), Some(&target_row)) = (index.get(&self.refs.head), index.get(hash))
+        else {
+            return false;
+        };
+        if target_row <= head_row {
+            return false;
+        }
+        let mut marked = vec![false; target_row + 1];
+        marked[head_row] = true;
+        for i in head_row..target_row {
+            if !marked[i] {
+                continue;
+            }
+            for parent in &commits[i].parents {
+                if let Some(&p) = index.get(parent).filter(|&&p| p > i && p <= target_row) {
+                    if p == target_row {
+                        return true;
+                    }
+                    marked[p] = true;
+                }
+            }
+        }
+        false
+    }
+
     /// Fast-forward, merge, rebase and interactive-rebase `current` with `git_ref`.
     pub(in crate::repo::graph_view::menu) fn integrate_branch_items(
         &self,
@@ -107,32 +143,34 @@ impl RepoTab {
         acts: &mut Vec<Action>,
     ) {
         let branch = git_ref.name;
-        if crate::menu_item::MenuItem::new(crate::i18n::message(
-            "repo-core-2634",
-            &[
-                ("current", current.to_string().into()),
-                ("branch", branch.to_string().into()),
-            ],
-        ))
-        .icon("arrow-right")
-        .enabled(idle)
-        .show(ui)
-        .clicked()
-        {
-            acts.push(fast_forward_action(git_ref, current));
-        }
-        let merge = crate::i18n::message(
-            "repo-core-2636",
-            &[
-                ("branch", branch.to_string().into()),
-                ("current", current.to_string().into()),
-            ],
-        );
-        if self
-            .conflict_button(ui, merge, idle, Op::Merge, hash)
+        if !self.is_ancestor_of_head(hash) {
+            if crate::menu_item::MenuItem::new(crate::i18n::message(
+                "repo-core-2634",
+                &[
+                    ("current", current.to_string().into()),
+                    ("branch", branch.to_string().into()),
+                ],
+            ))
+            .icon("arrow-right")
+            .enabled(idle)
+            .show(ui)
             .clicked()
-        {
-            acts.push(merge_action(git_ref, current));
+            {
+                acts.push(fast_forward_action(git_ref, current));
+            }
+            let merge = crate::i18n::message(
+                "repo-core-2636",
+                &[
+                    ("branch", branch.to_string().into()),
+                    ("current", current.to_string().into()),
+                ],
+            );
+            if self
+                .conflict_button(ui, merge, idle, Op::Merge, hash)
+                .clicked()
+            {
+                acts.push(merge_action(git_ref, current));
+            }
         }
         let rebase = crate::i18n::message(
             "repo-core-2637",

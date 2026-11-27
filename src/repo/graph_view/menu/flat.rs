@@ -40,13 +40,14 @@ impl Context<'_> {
         self.local.is_some() || self.remote.is_some()
     }
 
-    fn integrate_ref(&self, pill: Option<&str>) -> Option<BranchRef<'_>> {
+    fn integrate_ref(&self, pill: Option<&str>, hash: &str) -> Option<BranchRef<'_>> {
         if pill.is_some_and(|p| p.starts_with("refs/remotes/"))
             && let Some(b) = self.remote
         {
             return Some(BranchRef::remote(&b.name));
         }
         self.local
+            .filter(|b| b.target == hash)
             .map(|b| BranchRef::local(&b.name))
             .or_else(|| self.remote.map(|b| BranchRef::remote(&b.name)))
     }
@@ -76,11 +77,13 @@ pub(super) fn show(
         .unwrap_or_else(|| "HEAD".to_owned());
 
     let has_branch = ctx.has_branch();
-    if has_branch {
+    if ctx.local.is_some_and(|b| b.target == hash) {
         sync_items(tab, ui, &ctx, idle, acts);
         ui.separator();
+    }
+    if has_branch {
         if let Some(current) = tab.refs.current.as_deref()
-            && let Some(git_ref) = ctx.integrate_ref(pill.as_deref())
+            && let Some(git_ref) = ctx.integrate_ref(pill.as_deref(), &hash)
             && (git_ref.remote || git_ref.name != current)
         {
             tab.integrate_branch_items(ui, git_ref, current, &hash, idle, acts);
@@ -137,9 +140,11 @@ pub(super) fn show(
 }
 
 fn context<'a>(tab: &'a RepoTab, i: usize, pill: Option<&'a str>) -> Context<'a> {
+    let fallback = pill.is_none().then(|| tab.copy_branch_ref(i)).flatten();
+    let chosen = pill.or(fallback.as_deref());
     let mut remote = None;
     let mut remote_name = None;
-    if let Some(short) = pill.and_then(|p| p.strip_prefix("refs/remotes/")) {
+    if let Some(short) = chosen.and_then(|p| p.strip_prefix("refs/remotes/")) {
         remote = tab
             .refs
             .remotes
@@ -154,19 +159,13 @@ fn context<'a>(tab: &'a RepoTab, i: usize, pill: Option<&'a str>) -> Context<'a>
             .map(str::to_owned)
             .or_else(|| short.split('/').next().map(str::to_owned));
     }
-    let mut local = pill
+    let mut local = chosen
         .and_then(|p| p.strip_prefix("refs/heads/"))
         .and_then(|n| tab.refs.local.iter().find(|b| b.name == n));
     if local.is_none()
         && let Some(short) = remote.map(|b| b.name.as_str())
     {
         local = tab.refs.local.iter().find(|b| b.upstream == short);
-    }
-    if local.is_none()
-        && let Some(full) = tab.copy_branch_ref(i)
-        && let Some(n) = full.strip_prefix("refs/heads/")
-    {
-        local = tab.refs.local.iter().find(|b| b.name == n);
     }
     if remote.is_none()
         && let Some(b) = local

@@ -140,6 +140,7 @@ fn flat_menu_hides_remote_delete_items_when_remote_is_on_another_commit() {
     let mut t = tab();
     let other_hash = "b".repeat(40);
     t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.graph_badge_index = crate::repo::graph_view::BadgeIndex::new(&t.refs);
     t.commits.push(Arc::new(git::Commit {
         hash: other_hash,
         summary: "Earlier commit".to_owned(),
@@ -173,6 +174,7 @@ fn flat_menu_hides_rename_when_local_branch_is_on_another_commit() {
     let mut t = tab();
     let other_hash = "b".repeat(40);
     t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.graph_badge_index = crate::repo::graph_view::BadgeIndex::new(&t.refs);
     t.commits.push(Arc::new(git::Commit {
         hash: other_hash.clone(),
         summary: "Remote commit".to_owned(),
@@ -308,5 +310,124 @@ fn flat_menu_on_other_branch_commit_shows_integration_and_cherry_pick() {
         "Revert commit",
     ] {
         h.get_by_label(label);
+    }
+}
+
+#[test]
+fn flat_menu_on_remote_only_commit_shows_remote_integration_and_submenus() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.refs.current = Some("main".to_owned());
+    t.refs.local.push(git::Branch {
+        name: "main".to_owned(),
+        target: t.refs.head.clone(),
+        is_head: true,
+        upstream: String::new(),
+        track: String::new(),
+    });
+    t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.graph_badge_index = crate::repo::graph_view::BadgeIndex::new(&t.refs);
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash,
+        summary: "Remote-only commit".to_owned(),
+        refs: vec!["origin/dev".to_owned()],
+        ..Default::default()
+    }));
+    let row_idx = t.commits.len() - 1;
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            tab.commit_menu(&row, row_idx, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    for label in [
+        "Fast-forward main to origin/dev",
+        "Merge origin/dev into main checking…",
+        "Rebase main onto origin/dev checking…",
+        "Interactive rebase main onto origin/dev…",
+        "Checkout ⏵",
+        "Create worktree from ⏵",
+        "Create branch here…",
+        "Cherry pick commit checking…",
+        "Reset main to this commit ⏵",
+        "Revert commit",
+    ] {
+        h.get_by_label(label);
+    }
+    for hidden in ["Pull (fast-forward if possible)", "Push", "Set Upstream"] {
+        assert!(
+            h.query_by_label(hidden).is_none(),
+            "unexpected item: {hidden}"
+        );
+    }
+}
+
+#[test]
+fn flat_menu_on_ancestor_remote_branch_hides_fast_forward_and_merge() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.refs.current = Some("main".to_owned());
+    t.refs.local.push(git::Branch {
+        name: "main".to_owned(),
+        target: t.refs.head.clone(),
+        is_head: true,
+        upstream: String::new(),
+        track: String::new(),
+    });
+    t.refs.remotes[0].1[0].target = other_hash.clone();
+    t.graph_badge_index = crate::repo::graph_view::BadgeIndex::new(&t.refs);
+    Arc::make_mut(&mut t.commits[0]).parents = vec![other_hash.clone()];
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash.clone(),
+        summary: "Ancestor remote-only commit".to_owned(),
+        refs: vec!["origin/dev".to_owned()],
+        ..Default::default()
+    }));
+    let row_idx = t.commits.len() - 1;
+    t.index = t
+        .commits
+        .iter()
+        .enumerate()
+        .map(|(i, c)| (c.hash.clone(), i))
+        .collect();
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            tab.commit_menu(&row, row_idx, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    for label in [
+        "Rebase main onto origin/dev checking…",
+        "Interactive rebase main onto origin/dev…",
+        "Checkout ⏵",
+        "Create worktree from ⏵",
+        "Create branch here…",
+        "Cherry pick commit checking…",
+        "Reset main to this commit ⏵",
+        "Revert commit",
+    ] {
+        h.get_by_label(label);
+    }
+    for hidden in [
+        "Fast-forward main to origin/dev",
+        "Merge origin/dev into main checking…",
+        "Pull (fast-forward if possible)",
+        "Push",
+        "Set Upstream",
+    ] {
+        assert!(
+            h.query_by_label(hidden).is_none(),
+            "unexpected item: {hidden}"
+        );
     }
 }
