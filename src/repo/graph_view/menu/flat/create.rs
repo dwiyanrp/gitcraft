@@ -26,8 +26,9 @@ pub(super) fn create_items(
         acts,
         Action::Dialog(Dialog::create_branch(hash, short)),
     );
+    cherry_pick_item(tab, ui, hash, short, merge, is_head, idle, acts);
     if !has_branch {
-        commit_rewrite_items(tab, ui, hash, short, target, merge, is_head, idle, acts);
+        rebase_onto_commit_item(tab, ui, hash, short, target, is_head, idle, acts);
     }
     reset_item(
         tab, ui, hash, short, summary, target, merge, is_head, idle, acts,
@@ -47,12 +48,11 @@ pub(super) fn create_items(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn commit_rewrite_items(
+fn cherry_pick_item(
     tab: &RepoTab,
     ui: &mut Ui,
     hash: &str,
     short: &str,
-    target: &str,
     merge: bool,
     is_head: bool,
     idle: bool,
@@ -72,7 +72,18 @@ fn commit_rewrite_items(
     if picked.clicked() {
         acts.push(crate::repo::commit_actions::cherry_pick_action(hash, short));
     }
+}
 
+fn rebase_onto_commit_item(
+    tab: &RepoTab,
+    ui: &mut Ui,
+    hash: &str,
+    short: &str,
+    target: &str,
+    is_head: bool,
+    idle: bool,
+    acts: &mut Vec<Action>,
+) {
     let rebase_label = crate::i18n::message("repo-core-4265", &[("target", target.to_string().into())]);
     let rebase = tab.conflict_button(ui, rebase_label, idle && !is_head, Op::Rebase, hash);
     offer(&rebase, || GhostOp::Rebase {

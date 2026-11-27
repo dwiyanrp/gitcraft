@@ -75,6 +75,38 @@ impl RepoTab {
         let Some(current) = self.refs.current.as_deref() else {
             return;
         };
+        self.integrate_branch_items(ui, git_ref, current, hash, idle, acts);
+        if crate::settings::Settings::get(ui.ctx())
+            .context_menus
+            .rehearsal
+        {
+            crate::menu_item::group_named(
+                ui,
+                "Advanced",
+                crate::i18n::text("dev-integration-ui-advanced"),
+                |ui| {
+                    crate::repo::rehearse::rehearse_item(ui, acts, git_ref);
+                    if git_ref.full() != format!("refs/heads/{current}") {
+                        crate::repo::interaction::interaction_item(ui, acts, &git_ref.full());
+                    }
+                },
+            );
+        }
+        ui.separator();
+        compare_items(ui, acts, git_ref, current);
+    }
+
+    /// Fast-forward, merge, rebase and interactive-rebase `current` with `git_ref`.
+    pub(in crate::repo::graph_view::menu) fn integrate_branch_items(
+        &self,
+        ui: &mut Ui,
+        git_ref: BranchRef<'_>,
+        current: &str,
+        hash: &str,
+        idle: bool,
+        acts: &mut Vec<Action>,
+    ) {
+        let branch = git_ref.name;
         if crate::menu_item::MenuItem::new(crate::i18n::message(
             "repo-core-2634",
             &[
@@ -131,24 +163,6 @@ impl RepoTab {
         {
             acts.push(interactive_rebase_action(git_ref));
         }
-        if crate::settings::Settings::get(ui.ctx())
-            .context_menus
-            .rehearsal
-        {
-            crate::menu_item::group_named(
-                ui,
-                "Advanced",
-                crate::i18n::text("dev-integration-ui-advanced"),
-                |ui| {
-                    crate::repo::rehearse::rehearse_item(ui, acts, git_ref);
-                    if git_ref.full() != format!("refs/heads/{current}") {
-                        crate::repo::interaction::interaction_item(ui, acts, &git_ref.full());
-                    }
-                },
-            );
-        }
-        ui.separator();
-        compare_items(ui, acts, git_ref, current);
     }
 
     /// A submenu for each local branch pointing at the commit, creating a branch or tag there,

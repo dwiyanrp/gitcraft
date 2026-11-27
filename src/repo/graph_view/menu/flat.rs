@@ -39,6 +39,17 @@ impl Context<'_> {
     pub(super) fn has_branch(&self) -> bool {
         self.local.is_some() || self.remote.is_some()
     }
+
+    fn integrate_ref(&self, pill: Option<&str>) -> Option<BranchRef<'_>> {
+        if pill.is_some_and(|p| p.starts_with("refs/remotes/"))
+            && let Some(b) = self.remote
+        {
+            return Some(BranchRef::remote(&b.name));
+        }
+        self.local
+            .map(|b| BranchRef::local(&b.name))
+            .or_else(|| self.remote.map(|b| BranchRef::remote(&b.name)))
+    }
 }
 
 pub(super) fn show(
@@ -68,6 +79,13 @@ pub(super) fn show(
     if has_branch {
         sync_items(tab, ui, &ctx, idle, acts);
         ui.separator();
+        if let Some(current) = tab.refs.current.as_deref()
+            && let Some(git_ref) = ctx.integrate_ref(pill.as_deref())
+            && (git_ref.remote || git_ref.name != current)
+        {
+            tab.integrate_branch_items(ui, git_ref, current, &hash, idle, acts);
+            ui.separator();
+        }
     }
     checkout_items(ui, &ctx, &hash, &target, is_head, idle, acts);
     ui.separator();

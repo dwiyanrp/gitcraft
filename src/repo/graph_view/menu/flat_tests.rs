@@ -250,3 +250,63 @@ fn flat_menu_on_commit_without_branch_shows_commit_actions() {
         );
     }
 }
+
+#[test]
+fn flat_menu_on_other_branch_commit_shows_integration_and_cherry_pick() {
+    let mut t = tab();
+    let other_hash = "b".repeat(40);
+    t.refs.current = Some("main".to_owned());
+    t.refs.local = vec![
+        git::Branch {
+            name: "main".to_owned(),
+            target: "a".repeat(40),
+            is_head: true,
+            upstream: String::new(),
+            track: String::new(),
+        },
+        git::Branch {
+            name: "b".to_owned(),
+            target: other_hash.clone(),
+            is_head: false,
+            upstream: String::new(),
+            track: String::new(),
+        },
+    ];
+    t.commits.push(Arc::new(git::Commit {
+        hash: other_hash.clone(),
+        summary: "Branch b commit".to_owned(),
+        ..Default::default()
+    }));
+    let row_idx = t.commits.len() - 1;
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            ui.data_mut(|d| {
+                d.insert_temp(
+                    super::pill_menu_id(&other_hash),
+                    Some("refs/heads/b".to_owned()),
+                )
+            });
+            tab.commit_menu(&row, row_idx, true, acts);
+        },
+        (t, Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    for label in [
+        "Fast-forward main to b",
+        "Merge b into main checking…",
+        "Rebase main onto b checking…",
+        "Interactive rebase main onto b…",
+        "Checkout ⏵",
+        "Create worktree from ⏵",
+        "Create branch here…",
+        "Cherry pick commit checking…",
+        "Reset main to this commit ⏵",
+        "Revert commit",
+    ] {
+        h.get_by_label(label);
+    }
+}
