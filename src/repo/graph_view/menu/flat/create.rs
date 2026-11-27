@@ -26,7 +26,9 @@ pub(super) fn create_items(
         acts,
         Action::Dialog(Dialog::create_branch(hash, short)),
     );
-    cherry_pick_item(tab, ui, hash, short, merge, is_head, idle, acts);
+    if !is_head {
+        cherry_pick_item(tab, ui, hash, short, merge, idle, acts);
+    }
     if !has_branch {
         rebase_onto_commit_item(tab, ui, hash, short, target, is_head, idle, acts);
     }
@@ -47,27 +49,23 @@ pub(super) fn create_items(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 fn cherry_pick_item(
     tab: &RepoTab,
     ui: &mut Ui,
     hash: &str,
     short: &str,
     merge: bool,
-    is_head: bool,
     idle: bool,
     acts: &mut Vec<Action>,
 ) {
-    let checked_out = crate::i18n::text("repo-core-0796");
     let cherry_pick = crate::i18n::text("repo-core-4264").to_owned();
     let picked = if merge {
         MenuItem::new(cherry_pick)
             .icon("command")
             .enabled(idle)
-            .refused(is_head.then_some(checked_out))
             .show(ui)
     } else {
-        tab.conflict_button(ui, cherry_pick, idle && !is_head, Op::CherryPick, hash)
+        tab.conflict_button(ui, cherry_pick, idle, Op::CherryPick, hash)
     };
     if picked.clicked() {
         acts.push(crate::repo::commit_actions::cherry_pick_action(hash, short));

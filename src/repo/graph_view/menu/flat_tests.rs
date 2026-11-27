@@ -93,6 +93,12 @@ fn right_click_shows_the_flat_gitkraken_style_list() {
     ] {
         h.get_by_label(label);
     }
+    for hidden in ["Cherry pick commit", "Cherry pick commit checking…"] {
+        assert!(
+            h.query_by_label(hidden).is_none(),
+            "unexpected item: {hidden}"
+        );
+    }
 }
 
 #[test]
@@ -425,6 +431,33 @@ fn flat_menu_on_ancestor_remote_branch_hides_fast_forward_and_merge() {
         "Push",
         "Set Upstream",
     ] {
+        assert!(
+            h.query_by_label(hidden).is_none(),
+            "unexpected item: {hidden}"
+        );
+    }
+}
+
+#[test]
+fn flat_menu_on_head_hides_cherry_pick() {
+    let mut h = egui_kittest::Harness::builder().build_ui_state(
+        |ui, (tab, acts): &mut (crate::repo::RepoTab, Vec<crate::repo::Action>)| {
+            let row = ui.button("Commit row");
+            ui.data_mut(|d| {
+                d.insert_temp(
+                    super::pill_menu_id(&"a".repeat(40)),
+                    Some("refs/heads/dev".to_owned()),
+                )
+            });
+            tab.commit_menu(&row, 0, true, acts);
+        },
+        (tab(), Vec::new()),
+    );
+    h.run();
+    h.get_by_label("Commit row").click_secondary();
+    h.run();
+
+    for hidden in ["Cherry pick commit", "Cherry pick commit checking…"] {
         assert!(
             h.query_by_label(hidden).is_none(),
             "unexpected item: {hidden}"
