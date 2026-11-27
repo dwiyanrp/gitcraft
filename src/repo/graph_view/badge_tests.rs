@@ -224,3 +224,49 @@ fn thousands_of_local_and_remote_twins_keep_head_order_and_separate_tags() {
     assert_eq!(got[3000].kind, BadgeKind::Tag);
     assert_eq!(got[3000].label, "team/feature-2999");
 }
+
+#[test]
+fn remote_branch_caption_omits_origin_prefix_even_with_local_twin() {
+    let refs = Refs {
+        local: vec![branch("dev")],
+        remotes: vec![
+            ("origin".to_owned(), vec![branch("origin/dev")]),
+            ("fork".to_owned(), vec![branch("fork/dev")]),
+        ],
+        ..Refs::default()
+    };
+    let mut index = BadgeIndex::new(&refs);
+    index.captions = std::sync::Arc::new(
+        [
+            (
+                "refs/heads/dev".to_owned(),
+                crate::ref_labels::Label {
+                    caption: "dev".to_owned(),
+                    qualifier: None,
+                },
+            ),
+            (
+                "refs/remotes/origin/dev".to_owned(),
+                crate::ref_labels::Label {
+                    caption: "origin/dev".to_owned(),
+                    qualifier: Some("origin".to_owned()),
+                },
+            ),
+            (
+                "refs/remotes/fork/dev".to_owned(),
+                crate::ref_labels::Label {
+                    caption: "fork/dev".to_owned(),
+                    qualifier: Some("fork".to_owned()),
+                },
+            ),
+        ]
+        .into_iter()
+        .collect(),
+    );
+    let origin_only = index.badges(&["origin/dev".to_owned()]);
+    assert_eq!(origin_only[0].caption, "dev");
+    assert!(!origin_only[0].local && origin_only[0].remotes == ["origin"]);
+
+    let fork_only = index.badges(&["fork/dev".to_owned()]);
+    assert_eq!(fork_only[0].caption, "fork/dev");
+}

@@ -193,22 +193,7 @@ impl RepoTab {
                 &|_: &&Branch| false,
                 &|b: &&Branch| ("branch-row", remote_ref(&b.name)),
                 &mut |ui, row, b: &&Branch| {
-                    let full = remote_ref(&b.name);
-                    let caption = labels
-                        .get(&full)
-                        .map(|l| l.caption.as_str())
-                        .unwrap_or(row.name);
-                    self.remote_branch_row(
-                        ui,
-                        acts,
-                        &remote.name,
-                        b,
-                        LeafRow {
-                            name: caption,
-                            ..row
-                        },
-                        idle,
-                    );
+                    self.remote_branch_row(ui, acts, &remote.name, b, row, idle);
                 },
             );
         }

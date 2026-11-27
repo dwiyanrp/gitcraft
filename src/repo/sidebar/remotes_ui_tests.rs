@@ -174,3 +174,42 @@ fn remote_menus_and_hidden_groups_are_reachable_at_every_width_and_scale() -> Re
     }
     Ok(())
 }
+
+#[test]
+fn remote_branches_display_short_name_without_origin_prefix() {
+    let mut tab = fixture();
+    tab.refs.local.push(Branch {
+        name: "a-very-long-remote-branch-name".into(),
+        target: "b".repeat(40),
+        is_head: false,
+        upstream: String::new(),
+        track: String::new(),
+    });
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
+        let mut acts = Vec::new();
+        let mut sections = Sections::new(egui::Id::new("remote-short-test"), None);
+        tab.remotes_section(ui, &mut acts, true, "", &mut sections);
+        sections.show(ui, ui.clip_rect(), 0.0, &mut acts);
+    });
+    output.textures_delta.clear();
+    let texts: Vec<String> = output
+        .shapes
+        .iter()
+        .filter_map(|s| match &s.shape {
+            egui::epaint::Shape::Text(t) => Some(t.galley.text().to_owned()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        texts.iter().any(|t| t == "a-very-long-remote-branch-name"),
+        "expected short remote branch name, got: {texts:?}"
+    );
+    assert!(
+        !texts
+            .iter()
+            .any(|t| t.starts_with("origin/") || t.starts_with("fork/")),
+        "remote branch should not display remote prefix, got: {texts:?}"
+    );
+}

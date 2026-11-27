@@ -359,6 +359,12 @@ impl BadgeIndex {
             }
         }
         for badge in &mut out {
+            if badge.kind == BadgeKind::Branch
+                && !badge.local
+                && (self.names.len() <= 1 || badge.remotes.iter().any(|r| r == "origin"))
+            {
+                continue;
+            }
             if let Some(full) = badge.full_refs().first()
                 && let Some(label) = self.captions.get(full)
             {
