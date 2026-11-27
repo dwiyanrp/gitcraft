@@ -1,6 +1,6 @@
 # Build the release source, including the default native Git and syntax backends.
 pkgname=gitcraft
-pkgver=0.3.5
+pkgver=0.4.0
 pkgrel=1
 pkgdesc='A small, personal visual git client'
 arch=('x86_64' 'aarch64')

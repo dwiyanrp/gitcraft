@@ -2,7 +2,7 @@
 
 Two independent package directories are provided:
 
-- `gitcraft`: builds the pinned 0.3.5 release source with its default features;
+- `gitcraft`: builds the pinned 0.4.0 release source with its default features;
   supports x86_64 and aarch64 and requires Rust 1.95 or newer.
 - `gitcraft-bin`: installs the official x86_64 release archive, verified with SHA-256.
 
@@ -40,7 +40,7 @@ makepkg -s
 namcap PKGBUILD ./*.pkg.tar.zst
 makepkg --printsrcinfo > .SRCINFO
 git add PKGBUILD .SRCINFO
-git commit -m 'Add gitcraft-bin 0.3.5'
+git commit -m 'Add gitcraft-bin 0.4.0'
 git push origin master
 ```
 

@@ -1,6 +1,6 @@
 pkgbase = gitcraft
 	pkgdesc = A small, personal visual git client
-	pkgver = 0.3.5
+	pkgver = 0.4.0
 	pkgrel = 1
 	url = https://github.com/JKamsker/gitcraft
 	arch = x86_64
